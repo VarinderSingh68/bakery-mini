@@ -304,10 +304,10 @@
         address: "Cake Street, Your City",
         adminPasscode: "owner123",
         emailjs: {
-          publicKey: "",
-          serviceId: "",
-          customerTemplateId: "",
-          ownerTemplateId: ""
+          publicKey: "bErS5uMcw3hPVUd01",
+          serviceId: "service_l9tcf9a",
+          customerTemplateId: "template_suyw6ao",
+          ownerTemplateId: "template_a9i8r6e"
         }
       },
       categories: [
@@ -389,7 +389,10 @@
         emailjs: {
           ...defaults.settings.emailjs,
           ...emailjs
-        }
+          publicKey: emailjs.publicKey || defaults.settings.emailjs.publicKey,
+          serviceId: emailjs.serviceId || defaults.settings.emailjs.serviceId,
+          customerTemplateId: emailjs.customerTemplateId || defaults.settings.emailjs.customerTemplateId,
+          ownerTemplateId: emailjs.ownerTemplateId || defaults.settings.emailjs.ownerTemplateId
       },
       categories: Array.isArray(data.categories) && data.categories.length ? data.categories : defaults.categories,
       products,
