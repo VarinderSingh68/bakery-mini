@@ -1,0 +1,13 @@
+# Local development output
+server.*.log
+.refact/
+
+# Editor and operating-system files
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Local secrets and environment files
+.env
+.env.*
+!.env.example

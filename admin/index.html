@@ -1,0 +1,295 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Bakery Admin Dashboard</title>
+    <link rel="stylesheet" href="../css/styles.css" />
+  </head>
+  <body data-page="admin">
+    <main class="admin-shell">
+      <section class="login-card" id="loginView">
+        <p class="eyebrow">Owner access</p>
+        <h1>Admin dashboard</h1>
+        <p>Private owner area for the cake menu, special days, and COD orders.</p>
+        <form id="loginForm" class="stack-form">
+          <label>
+            Admin passcode
+            <input name="passcode" type="password" autocomplete="current-password" required />
+          </label>
+          <button class="primary-button full" type="submit">Open dashboard</button>
+          <p class="form-note" id="loginMessage" role="status"></p>
+        </form>
+      </section>
+
+      <section class="dashboard" id="dashboardView" hidden>
+        <aside class="admin-sidebar">
+          <div class="brand admin-brand">
+            <span class="brand-mark">SL</span>
+            <span>
+              <strong data-admin-brand>Sweet Layer Bakery</strong>
+              <small>Owner dashboard</small>
+            </span>
+          </div>
+
+          <nav class="admin-nav" aria-label="Admin sections">
+            <button class="nav-link active" type="button" data-panel="overviewPanel">Overview</button>
+            <button class="nav-link" type="button" data-panel="productsPanel">Products</button>
+            <button class="nav-link" type="button" data-panel="categoriesPanel">Categories</button>
+            <button class="nav-link" type="button" data-panel="specialsPanel">Special days</button>
+            <button class="nav-link" type="button" data-panel="ordersPanel">Orders</button>
+            <button class="nav-link" type="button" data-panel="settingsPanel">Settings</button>
+          </nav>
+
+          <button class="ghost-button full" id="logoutButton" type="button">Logout</button>
+        </aside>
+
+        <div class="admin-main">
+          <header class="admin-topbar">
+            <div>
+              <p class="eyebrow">Dashboard</p>
+              <h1 id="adminTitle">Overview</h1>
+            </div>
+            <a class="ghost-button" href="../index.html">View website</a>
+          </header>
+
+          <section class="admin-panel active" id="overviewPanel">
+            <div class="stats-grid">
+              <article class="stat-card">
+                <span>Products</span>
+                <strong id="statProducts">0</strong>
+              </article>
+              <article class="stat-card">
+                <span>Categories</span>
+                <strong id="statCategories">0</strong>
+              </article>
+              <article class="stat-card">
+                <span>Special slides</span>
+                <strong id="statSpecials">0</strong>
+              </article>
+              <article class="stat-card">
+                <span>Orders</span>
+                <strong id="statOrders">0</strong>
+              </article>
+            </div>
+
+            <div class="admin-card">
+              <h2>Quick notes</h2>
+              <p>
+                Add or edit cakes, set kg wise pricing, upload images, and create
+                special day slides that keep moving across the homepage.
+              </p>
+            </div>
+          </section>
+
+          <section class="admin-panel" id="productsPanel">
+            <div class="admin-layout">
+              <form class="admin-card stack-form" id="productForm">
+                <div class="card-head">
+                  <div>
+                    <p class="eyebrow">Cake editor</p>
+                    <h2 id="productFormTitle">Add product</h2>
+                  </div>
+                  <button class="ghost-button" id="clearProductForm" type="button">Clear</button>
+                </div>
+                <input name="id" type="hidden" />
+                <label>
+                  Cake name
+                  <input name="name" type="text" required />
+                </label>
+                <label>
+                  Category
+                  <input name="category" type="text" required />
+                </label>
+                <label>
+                  Short description
+                  <textarea name="description" rows="3" required></textarea>
+                </label>
+                <label>
+                  Ingredients / details
+                  <textarea name="details" rows="3"></textarea>
+                </label>
+
+                <div>
+                  <div class="mini-head">
+                    <strong>KG and price</strong>
+                    <button class="ghost-button small" id="addVariant" type="button">Add row</button>
+                  </div>
+                  <div class="variant-editor" id="variantEditor"></div>
+                </div>
+
+                <label>
+                  Product image
+                  <input name="image" type="file" accept="image/*" />
+                </label>
+                <img class="admin-preview" id="productImagePreview" alt="Product preview" />
+
+                <label class="check-row">
+                  <input name="active" type="checkbox" checked />
+                  Show this cake on the website
+                </label>
+
+                <button class="primary-button full" type="submit">Save product</button>
+              </form>
+
+              <div class="admin-card">
+                <div class="card-head">
+                  <div>
+                    <p class="eyebrow">Current cakes</p>
+                    <h2>Product list</h2>
+                  </div>
+                </div>
+                <div class="item-list" id="productList"></div>
+              </div>
+            </div>
+          </section>
+
+          <section class="admin-panel" id="categoriesPanel">
+            <div class="admin-layout slim">
+              <form class="admin-card stack-form" id="categoryForm">
+                <p class="eyebrow">Category editor</p>
+                <h2>Add category</h2>
+                <label>
+                  Category name
+                  <input name="name" type="text" required />
+                </label>
+                <button class="primary-button full" type="submit">Add category</button>
+              </form>
+              <div class="admin-card">
+                <h2>Categories</h2>
+                <div class="pill-list" id="categoryList"></div>
+              </div>
+            </div>
+          </section>
+
+          <section class="admin-panel" id="specialsPanel">
+            <div class="admin-layout">
+              <form class="admin-card stack-form" id="specialForm">
+                <div class="card-head">
+                  <div>
+                    <p class="eyebrow">Sliding homepage board</p>
+                    <h2 id="specialFormTitle">Add special day item</h2>
+                  </div>
+                  <button class="ghost-button" id="clearSpecialForm" type="button">Clear</button>
+                </div>
+                <input name="id" type="hidden" />
+                <label>
+                  Special title
+                  <input name="title" type="text" required />
+                </label>
+                <label>
+                  Cake or offer name
+                  <input name="cakeName" type="text" required />
+                </label>
+                <label>
+                  Date / day label
+                  <input name="dateLabel" type="text" placeholder="Example: Birthday Week" required />
+                </label>
+                <label>
+                  Message
+                  <textarea name="message" rows="3" required></textarea>
+                </label>
+                <label>
+                  Preview description
+                  <textarea name="description" rows="3" required></textarea>
+                </label>
+                <label>
+                  Ingredients / full details
+                  <textarea name="details" rows="3"></textarea>
+                </label>
+
+                <div>
+                  <div class="mini-head">
+                    <strong>Special kg and price</strong>
+                    <button class="ghost-button small" id="addSpecialVariant" type="button">Add row</button>
+                  </div>
+                  <div class="variant-editor" id="specialVariantEditor"></div>
+                </div>
+
+                <label>
+                  Special image
+                  <input name="image" type="file" accept="image/*" />
+                </label>
+                <img class="admin-preview" id="specialImagePreview" alt="Special preview" />
+                <label class="check-row">
+                  <input name="active" type="checkbox" checked />
+                  Show in homepage slider
+                </label>
+                <button class="primary-button full" type="submit">Save special item</button>
+              </form>
+
+              <div class="admin-card">
+                <h2>Special day slider</h2>
+                <div class="item-list" id="specialList"></div>
+              </div>
+            </div>
+          </section>
+
+          <section class="admin-panel" id="ordersPanel">
+            <div class="admin-card">
+              <div class="card-head">
+                <div>
+                  <p class="eyebrow">Customer orders</p>
+                  <h2>COD order details</h2>
+                </div>
+                <button class="ghost-button" id="clearOrders" type="button">Clear orders</button>
+              </div>
+              <div class="order-list" id="orderList"></div>
+            </div>
+          </section>
+
+          <section class="admin-panel" id="settingsPanel">
+            <form class="admin-card stack-form settings-form" id="settingsForm">
+              <p class="eyebrow">Website settings</p>
+              <h2>Bakery and email setup</h2>
+              <div class="form-grid">
+                <label>
+                  Bakery name
+                  <input name="bakeryName" type="text" required />
+                </label>
+                <label>
+                  Owner email
+                  <input name="ownerEmail" type="email" required />
+                </label>
+                <label>
+                  Phone number
+                  <input name="phone" type="text" />
+                </label>
+                <label>
+                  Admin passcode
+                  <input name="adminPasscode" type="password" required />
+                </label>
+                <label class="wide">
+                  Bakery address
+                  <textarea name="address" rows="3"></textarea>
+                </label>
+                <label>
+                  EmailJS public key
+                  <input name="emailPublicKey" type="text" />
+                </label>
+                <label>
+                  EmailJS service ID
+                  <input name="emailServiceId" type="text" />
+                </label>
+                <label>
+                  Customer template ID
+                  <input name="customerTemplateId" type="text" />
+                </label>
+                <label>
+                  Owner template ID
+                  <input name="ownerTemplateId" type="text" />
+                </label>
+              </div>
+              <button class="primary-button" type="submit">Save settings</button>
+              <button class="danger-button" id="resetData" type="button">Reset demo data</button>
+              <p class="form-note" id="settingsMessage" role="status"></p>
+            </form>
+          </section>
+        </div>
+      </section>
+    </main>
+
+    <script src="../js/data.js"></script>
+    <script src="../js/admin.js"></script>
+  </body>
+</html>

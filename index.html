@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sweet Layer Bakery</title>
+    <meta
+      name="description"
+      content="A simple bakery website with cake ordering, Cash on Delivery checkout, and an owner admin dashboard."
+    />
+    <link rel="stylesheet" href="css/styles.css" />
+  </head>
+  <body data-page="storefront">
+    <header class="site-header">
+      <a class="brand" href="#cakes" aria-label="Sweet Layer Bakery home">
+        <span class="brand-mark">SL</span>
+        <span>
+          <strong data-brand-name>Sweet Layer Bakery</strong>
+          <small>Fresh celebration cakes</small>
+        </span>
+      </a>
+
+      <button class="cart-button" id="openCart" type="button" aria-label="Open cart">
+        <span>Cart</span>
+        <span class="cart-count" id="cartCount">0</span>
+      </button>
+    </header>
+
+    <main>
+      <section class="hero-section">
+        <div class="hero-copy">
+          <p class="eyebrow">Cash on delivery cakes</p>
+          <h1 data-brand-heading>Sweet Layer Bakery</h1>
+          <p>
+            Order soft, handcrafted cakes in different kg sizes. Fresh cream,
+            rich chocolate, fruit, and premium celebration flavors are ready
+            from the first screen.
+          </p>
+        </div>
+        <div class="hero-image-wrap" aria-hidden="true">
+          <img id="heroCake" alt="" />
+        </div>
+      </section>
+
+      <section class="special-strip" aria-label="Special day cakes">
+        <div class="section-heading compact">
+          <p class="eyebrow">Special day board</p>
+          <h2>Today's celebration picks</h2>
+        </div>
+        <div class="special-window">
+          <div class="special-track" id="specialTrack"></div>
+        </div>
+      </section>
+
+      <section class="catalog-section" id="cakes">
+        <div class="section-heading">
+          <p class="eyebrow">25 cakes available</p>
+          <h2>Choose a cake and kg size</h2>
+        </div>
+        <div class="product-grid" id="productGrid" aria-live="polite"></div>
+      </section>
+    </main>
+
+    <aside class="preview-modal" id="specialPreview" aria-hidden="true">
+      <div class="preview-panel" role="dialog" aria-modal="true" aria-labelledby="specialPreviewTitle">
+        <button class="icon-button preview-close" id="specialPreviewClose" type="button" aria-label="Close preview">x</button>
+        <img class="preview-image" id="specialPreviewImage" alt="" />
+        <div class="preview-content">
+          <p class="eyebrow" id="specialPreviewDate">Special day</p>
+          <h2 id="specialPreviewTitle">Special cake</h2>
+          <strong id="specialPreviewCakeName"></strong>
+          <p class="preview-category" id="specialPreviewCategory"></p>
+          <p id="specialPreviewMessage"></p>
+          <p class="details-line" id="specialPreviewDetails"></p>
+          <div class="kg-options preview-kg-options" id="specialVariantOptions" aria-label="Special cake size and price"></div>
+          <button class="primary-button full" id="addSpecialToCart" type="button">Add to cart</button>
+        </div>
+      </div>
+    </aside>
+
+    <aside class="cart-drawer" id="cartDrawer" aria-hidden="true">
+      <div class="drawer-panel" role="dialog" aria-modal="true" aria-labelledby="cartTitle">
+        <div class="drawer-head">
+          <div>
+            <p class="eyebrow">Checkout</p>
+            <h2 id="cartTitle">Your cake order</h2>
+          </div>
+          <button class="icon-button" id="closeCart" type="button" aria-label="Close cart">x</button>
+        </div>
+
+        <div class="cart-items" id="cartItems"></div>
+
+        <div class="total-line">
+          <span>Total</span>
+          <strong id="cartTotal">Rs. 0</strong>
+        </div>
+
+        <form class="checkout-form" id="checkoutForm">
+          <div class="form-grid">
+            <label>
+              Full name
+              <input name="name" type="text" autocomplete="name" required />
+            </label>
+            <label>
+              Email address
+              <input name="email" type="email" autocomplete="email" required />
+            </label>
+            <label>
+              Phone number
+              <input name="phone" type="tel" autocomplete="tel" required />
+            </label>
+            <label class="wide">
+              Full house address
+              <textarea name="address" rows="3" autocomplete="street-address" required></textarea>
+            </label>
+            <label class="wide">
+              Cake message or delivery instructions
+              <textarea name="instructions" rows="3"></textarea>
+            </label>
+          </div>
+
+          <div class="payment-box">
+            <span>Payment method</span>
+            <strong>Cash on Delivery</strong>
+          </div>
+
+          <button class="primary-button full" id="placeOrder" type="submit">
+            Place COD order
+          </button>
+          <p class="form-note" id="checkoutMessage" role="status"></p>
+        </form>
+      </div>
+    </aside>
+
+    <footer class="site-footer">
+      <strong data-brand-footer>Sweet Layer Bakery</strong>
+      <span id="footerContact">Fresh cakes delivered with Cash on Delivery.</span>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+    <script src="js/data.js"></script>
+    <script src="js/storefront.js"></script>
+  </body>
+</html>

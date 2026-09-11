@@ -1,0 +1,662 @@
+(function () {
+  "use strict";
+
+  const STORAGE_KEY = "sweet_layer_bakery_data_v1";
+  const CART_KEY = "sweet_layer_bakery_cart_v1";
+
+  const themes = [
+    ["#7b2d26", "#f7d6c4", "#4b1f19"],
+    ["#2f1c16", "#f8efe6", "#4a251d"],
+    ["#b23a48", "#fff1f3", "#80303b"],
+    ["#c47f22", "#fff0c2", "#9b5a10"],
+    ["#f2b84b", "#fff7de", "#d88a1d"],
+    ["#d8476b", "#ffe5ed", "#b32f55"],
+    ["#f2994a", "#fff0db", "#bf5b24"],
+    ["#5661a7", "#e8ecff", "#343c7a"],
+    ["#60412a", "#f1e0d1", "#3d2619"],
+    ["#3c2d25", "#fff0dc", "#5a3324"],
+    ["#292929", "#f2f2f2", "#141414"],
+    ["#7a5536", "#f3dfc7", "#4b321f"],
+    ["#679436", "#fff8d8", "#8f6d18"],
+    ["#c94d6d", "#fff0f2", "#9b314d"],
+    ["#ad5b2b", "#ffe4c9", "#7d351b"],
+    ["#2d7d78", "#f1fff8", "#f2a541"],
+    ["#d64f7f", "#e8f6ff", "#f6c945"],
+    ["#a55c2b", "#fff4db", "#6e3a1f"],
+    ["#9a6a3a", "#fbefe1", "#694425"],
+    ["#6d4c41", "#f6eee8", "#3d2b25"],
+    ["#5b4636", "#e6d2bf", "#2c2018"],
+    ["#ededed", "#ffffff", "#7d4b38"],
+    ["#d9ad67", "#fff7e8", "#9d7144"],
+    ["#7ab8a6", "#f2fffb", "#3c7d70"],
+    ["#d0677f", "#fff1f4", "#a13f56"]
+  ];
+
+  const productRows = [
+    [
+      "Chocolate Truffle",
+      "Chocolate Classics",
+      "Dense cocoa sponge layered with silky chocolate ganache.",
+      "Chocolate sponge, ganache, cocoa glaze, chocolate curls.",
+      [520, 920, 1350, 1760]
+    ],
+    [
+      "Black Forest Cherry",
+      "Chocolate Classics",
+      "Classic chocolate cake with whipped cream and cherry filling.",
+      "Chocolate sponge, whipped cream, cherry compote, chocolate flakes.",
+      [480, 860, 1260, 1640]
+    ],
+    [
+      "Red Velvet Cream Cheese",
+      "Premium Specials",
+      "Soft red velvet layers finished with cream cheese frosting.",
+      "Red velvet sponge, cream cheese frosting, vanilla crumb.",
+      [620, 1120, 1640, 2150]
+    ],
+    [
+      "Butterscotch Praline",
+      "Cream Cakes",
+      "Vanilla sponge with butterscotch cream and crisp praline.",
+      "Vanilla sponge, butterscotch sauce, praline crunch.",
+      [460, 820, 1210, 1580]
+    ],
+    [
+      "Pineapple Sunshine",
+      "Fruit Cakes",
+      "Light cream cake packed with pineapple chunks and glaze.",
+      "Vanilla sponge, pineapple crush, whipped cream, pineapple glaze.",
+      [430, 760, 1130, 1480]
+    ],
+    [
+      "Strawberry Vanilla Cloud",
+      "Fruit Cakes",
+      "Vanilla cake with strawberry cream and fresh berry notes.",
+      "Vanilla sponge, strawberry compote, whipped cream.",
+      [490, 880, 1300, 1680]
+    ],
+    [
+      "Mango Mousse Cake",
+      "Fruit Cakes",
+      "Bright mango mousse over soft vanilla layers.",
+      "Vanilla sponge, mango mousse, mango glaze.",
+      [560, 990, 1460, 1900]
+    ],
+    [
+      "Blueberry Cream Cake",
+      "Fruit Cakes",
+      "Creamy blueberry filling with a soft vanilla base.",
+      "Vanilla sponge, blueberry compote, whipped cream.",
+      [570, 1010, 1490, 1940]
+    ],
+    [
+      "Dutch Cocoa Fudge",
+      "Chocolate Classics",
+      "Deep chocolate fudge cake for rich cocoa lovers.",
+      "Dutch cocoa sponge, fudge sauce, dark chocolate flakes.",
+      [590, 1060, 1560, 2040]
+    ],
+    [
+      "Choco Vanilla Marble",
+      "Cream Cakes",
+      "A neat swirl of chocolate and vanilla in every slice.",
+      "Marble sponge, vanilla cream, chocolate drizzle.",
+      [450, 790, 1170, 1530]
+    ],
+    [
+      "Cookies and Cream",
+      "Chocolate Classics",
+      "Chocolate layers with crushed cookie cream and smooth frosting.",
+      "Chocolate sponge, cookie crumb, vanilla cream.",
+      [540, 970, 1430, 1860]
+    ],
+    [
+      "Coffee Walnut",
+      "Premium Specials",
+      "Coffee soaked sponge finished with roasted walnut crunch.",
+      "Coffee sponge, mocha cream, roasted walnuts.",
+      [610, 1090, 1610, 2100]
+    ],
+    [
+      "Kesar Pista",
+      "Premium Specials",
+      "Saffron cream cake with pistachio and cardamom notes.",
+      "Vanilla sponge, saffron cream, pistachio, cardamom.",
+      [640, 1160, 1710, 2240]
+    ],
+    [
+      "Rasmalai Fusion",
+      "Premium Specials",
+      "Indian dessert inspired cake with rasmalai cream.",
+      "Saffron sponge, rasmalai cream, pistachio garnish.",
+      [690, 1260, 1850, 2420]
+    ],
+    [
+      "Gulab Jamun Celebration",
+      "Celebration Cakes",
+      "Soft cake layered with gulab jamun pieces and rabdi cream.",
+      "Vanilla sponge, rabdi cream, gulab jamun, nuts.",
+      [660, 1210, 1780, 2320]
+    ],
+    [
+      "Fresh Fruit Gateau",
+      "Fruit Cakes",
+      "Colorful fruit cake with light cream and seasonal toppings.",
+      "Vanilla sponge, whipped cream, fresh seasonal fruits.",
+      [620, 1120, 1650, 2160]
+    ],
+    [
+      "Rainbow Sprinkle",
+      "Celebration Cakes",
+      "Bright vanilla cake made for birthdays and happy tables.",
+      "Vanilla sponge, rainbow sprinkles, buttercream.",
+      [500, 900, 1330, 1740]
+    ],
+    [
+      "Caramel Almond",
+      "Premium Specials",
+      "Caramel cream cake finished with toasted almond flakes.",
+      "Vanilla sponge, salted caramel, almond flakes.",
+      [620, 1130, 1660, 2170]
+    ],
+    [
+      "Biscoff Caramel",
+      "Premium Specials",
+      "Spiced biscuit cream with caramel layers and crumb topping.",
+      "Vanilla sponge, biscuit spread, caramel, biscuit crumb.",
+      [680, 1240, 1820, 2380]
+    ],
+    [
+      "Tiramisu Cream",
+      "Premium Specials",
+      "Coffee cream cake with cocoa dusting and soft mascarpone notes.",
+      "Coffee sponge, mascarpone style cream, cocoa dust.",
+      [700, 1280, 1880, 2460]
+    ],
+    [
+      "Mocha Hazelnut",
+      "Chocolate Classics",
+      "Mocha chocolate cake with hazelnut crunch.",
+      "Chocolate sponge, coffee cream, hazelnut praline.",
+      [650, 1180, 1740, 2270]
+    ],
+    [
+      "White Forest",
+      "Cream Cakes",
+      "White chocolate cream cake with cherries and vanilla sponge.",
+      "Vanilla sponge, white chocolate cream, cherries.",
+      [510, 920, 1360, 1770]
+    ],
+    [
+      "Classic Vanilla Bean",
+      "Cream Cakes",
+      "Clean vanilla cake with smooth cream and a soft crumb.",
+      "Vanilla sponge, vanilla bean cream, white chocolate garnish.",
+      [420, 740, 1100, 1440]
+    ],
+    [
+      "Tender Coconut",
+      "Fruit Cakes",
+      "Refreshing coconut cream cake with soft tropical flavor.",
+      "Vanilla sponge, coconut cream, tender coconut pieces.",
+      [580, 1040, 1530, 2000]
+    ],
+    [
+      "Anniversary Rose Cake",
+      "Celebration Cakes",
+      "Elegant rose cream cake for anniversaries and intimate parties.",
+      "Vanilla sponge, rose cream, floral piping, white chocolate.",
+      [640, 1160, 1710, 2240]
+    ]
+  ];
+
+  function createProducts() {
+    return productRows.map((row, index) => {
+      const theme = themes[index % themes.length];
+      return {
+        id: `cake-${String(index + 1).padStart(3, "0")}`,
+        name: row[0],
+        category: row[1],
+        description: row[2],
+        details: row[3],
+        variants: [
+          { kg: "0.5 kg", price: row[4][0] },
+          { kg: "1 kg", price: row[4][1] },
+          { kg: "1.5 kg", price: row[4][2] },
+          { kg: "2 kg", price: row[4][3] }
+        ],
+        image: "",
+        accent: theme[0],
+        frosting: theme[1],
+        cakeColor: theme[2],
+        active: true
+      };
+    });
+  }
+
+  function cleanVariants(variants, fallbackVariants) {
+    const source = Array.isArray(variants) && variants.length ? variants : fallbackVariants || [];
+    return source
+      .map((variant) => {
+        return {
+          kg: String(variant.kg || "").trim(),
+          price: Number(variant.price) || 0
+        };
+      })
+      .filter((variant) => variant.kg && variant.price > 0);
+  }
+
+  function findProductByName(products, name) {
+    const normalized = String(name || "").trim().toLowerCase();
+    return products.find((product) => product.name.toLowerCase() === normalized);
+  }
+
+  function specialProductFields(products, cakeName) {
+    const product = findProductByName(products, cakeName);
+    if (!product) {
+      return {
+        category: "Special Day Cakes",
+        description: "Limited celebration cake prepared for a special day.",
+        details: "Fresh sponge, smooth frosting, and custom celebration finish.",
+        variants: [
+          { kg: "0.5 kg", price: 550 },
+          { kg: "1 kg", price: 990 }
+        ]
+      };
+    }
+
+    return {
+      category: product.category,
+      description: product.description,
+      details: product.details,
+      variants: cleanVariants(product.variants)
+    };
+  }
+
+  function normalizeSpecial(special, products, fallbackSpecial) {
+    const fallbackFields = specialProductFields(products, special.cakeName || fallbackSpecial?.cakeName);
+    const fallback = fallbackSpecial || {};
+
+    return {
+      ...fallback,
+      ...special,
+      category: special.category || fallback.category || fallbackFields.category,
+      description: special.description || fallback.description || fallbackFields.description,
+      details: special.details || fallback.details || fallbackFields.details,
+      variants: cleanVariants(special.variants, fallback.variants || fallbackFields.variants),
+      image: special.image || "",
+      accent: special.accent || fallback.accent || "#b23a48",
+      active: special.active !== false
+    };
+  }
+
+  function getDefaultData() {
+    const products = createProducts();
+    const birthdayFields = specialProductFields(products, "Rainbow Sprinkle");
+    const anniversaryFields = specialProductFields(products, "Anniversary Rose Cake");
+    const festiveFields = specialProductFields(products, "Rasmalai Fusion");
+
+    return {
+      settings: {
+        bakeryName: "Sweet Layer Bakery",
+        ownerEmail: "ngw.designer@gmail.com",
+        phone: "+91 98765 43210",
+        address: "Cake Street, Your City",
+        adminPasscode: "owner123",
+        emailjs: {
+          publicKey: "",
+          serviceId: "",
+          customerTemplateId: "",
+          ownerTemplateId: ""
+        }
+      },
+      categories: [
+        "Chocolate Classics",
+        "Cream Cakes",
+        "Fruit Cakes",
+        "Celebration Cakes",
+        "Premium Specials"
+      ],
+      products,
+      specials: [
+        {
+          id: "special-birthday",
+          title: "Birthday Week",
+          cakeName: "Rainbow Sprinkle",
+          dateLabel: "All week",
+          message: "Add a custom name and birthday message during checkout.",
+          category: birthdayFields.category,
+          description: birthdayFields.description,
+          details: birthdayFields.details,
+          variants: birthdayFields.variants,
+          image: "",
+          accent: "#d64f7f",
+          active: true
+        },
+        {
+          id: "special-anniversary",
+          title: "Anniversary Special",
+          cakeName: "Anniversary Rose Cake",
+          dateLabel: "This month",
+          message: "Elegant rose piping for small and large celebrations.",
+          category: anniversaryFields.category,
+          description: anniversaryFields.description,
+          details: anniversaryFields.details,
+          variants: anniversaryFields.variants,
+          image: "",
+          accent: "#b23a48",
+          active: true
+        },
+        {
+          id: "special-festive",
+          title: "Festive Dessert Table",
+          cakeName: "Rasmalai Fusion",
+          dateLabel: "Limited time",
+          message: "Indian dessert inspired cakes for family gatherings.",
+          category: festiveFields.category,
+          description: festiveFields.description,
+          details: festiveFields.details,
+          variants: festiveFields.variants,
+          image: "",
+          accent: "#c47f22",
+          active: true
+        }
+      ],
+      orders: []
+    };
+  }
+
+  function clone(value) {
+    return JSON.parse(JSON.stringify(value));
+  }
+
+  function normalizeData(input) {
+    const defaults = getDefaultData();
+    const data = input && typeof input === "object" ? input : {};
+    const settings = data.settings && typeof data.settings === "object" ? data.settings : {};
+    const emailjs = settings.emailjs && typeof settings.emailjs === "object" ? settings.emailjs : {};
+    const products = Array.isArray(data.products) && data.products.length ? data.products : defaults.products;
+    const specialSource = Array.isArray(data.specials) ? data.specials : defaults.specials;
+
+    return {
+      settings: {
+        ...defaults.settings,
+        ...settings,
+        ownerEmail:
+          settings.ownerEmail === "owner@example.com"
+            ? defaults.settings.ownerEmail
+            : settings.ownerEmail || defaults.settings.ownerEmail,
+        emailjs: {
+          ...defaults.settings.emailjs,
+          ...emailjs
+        }
+      },
+      categories: Array.isArray(data.categories) && data.categories.length ? data.categories : defaults.categories,
+      products,
+      specials: specialSource.map((special, index) => normalizeSpecial(special, products, defaults.specials[index])),
+      orders: Array.isArray(data.orders) ? data.orders : []
+    };
+  }
+
+  function loadData() {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) {
+      const defaults = getDefaultData();
+      saveData(defaults);
+      return defaults;
+    }
+
+    try {
+      return normalizeData(JSON.parse(raw));
+    } catch (error) {
+      console.warn("Bakery data was reset because it could not be read.", error);
+      const defaults = getDefaultData();
+      saveData(defaults);
+      return defaults;
+    }
+  }
+
+  function saveData(data) {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(normalizeData(data)));
+  }
+
+  function resetData() {
+    const defaults = getDefaultData();
+    saveData(defaults);
+    return defaults;
+  }
+
+  function createId(prefix) {
+    return `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+  }
+
+  function createOrderId() {
+    const now = new Date();
+    const date = [
+      now.getFullYear(),
+      String(now.getMonth() + 1).padStart(2, "0"),
+      String(now.getDate()).padStart(2, "0")
+    ].join("");
+    return `SL-${date}-${Math.random().toString(36).slice(2, 7).toUpperCase()}`;
+  }
+
+  function formatPrice(value) {
+    const number = Number(value) || 0;
+    return `Rs. ${number.toLocaleString("en-IN")}`;
+  }
+
+  function escapeHtml(value) {
+    return String(value ?? "").replace(/[&<>"']/g, (char) => {
+      const map = {
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#039;"
+      };
+      return map[char];
+    });
+  }
+
+  function shortLabel(name) {
+    return String(name || "Cake")
+      .split(/\s+/)
+      .slice(0, 2)
+      .join(" ")
+      .slice(0, 18);
+  }
+
+  function getProductImage(item) {
+    if (item && item.image) {
+      return item.image;
+    }
+    return makeCakeImage(item || {});
+  }
+
+  function makeCakeImage(item) {
+    const accent = item.accent || "#b23a48";
+    const frosting = item.frosting || "#fff1f3";
+    const cakeColor = item.cakeColor || "#6b2d22";
+    const label = escapeHtml(shortLabel(item.name || item.cakeName || item.title));
+    const svg = `
+      <svg xmlns="http://www.w3.org/2000/svg" width="900" height="720" viewBox="0 0 900 720">
+        <defs>
+          <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="${frosting}"/>
+            <stop offset="1" stop-color="#ffffff"/>
+          </linearGradient>
+          <linearGradient id="cake" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="${accent}"/>
+            <stop offset="1" stop-color="${cakeColor}"/>
+          </linearGradient>
+          <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+            <feDropShadow dx="0" dy="18" stdDeviation="20" flood-color="#3b1f1a" flood-opacity=".2"/>
+          </filter>
+        </defs>
+        <rect width="900" height="720" rx="46" fill="url(#bg)"/>
+        <circle cx="140" cy="120" r="86" fill="${accent}" opacity=".12"/>
+        <circle cx="770" cy="170" r="130" fill="#2d7d78" opacity=".1"/>
+        <circle cx="725" cy="570" r="84" fill="#f2b84b" opacity=".16"/>
+        <ellipse cx="450" cy="585" rx="290" ry="48" fill="#553228" opacity=".14"/>
+        <g filter="url(#shadow)">
+          <path d="M247 313c0-76 406-76 406 0v164c0 76-406 76-406 0z" fill="url(#cake)"/>
+          <ellipse cx="450" cy="313" rx="203" ry="74" fill="${frosting}"/>
+          <path d="M250 309c38 57 73 34 98 0 31 61 78 64 108 1 36 68 81 52 108 0 33 58 61 55 88 0v73c-24 48-64 44-91-1-33 52-79 55-111 3-33 50-82 48-111-4-28 49-63 48-89 2z" fill="${frosting}" opacity=".95"/>
+          <ellipse cx="450" cy="296" rx="170" ry="52" fill="#ffffff" opacity=".5"/>
+          <path d="M318 481c70 42 191 46 268 0" fill="none" stroke="#ffffff" stroke-width="16" stroke-linecap="round" opacity=".45"/>
+          <g fill="${accent}">
+            <circle cx="337" cy="250" r="13"/>
+            <circle cx="419" cy="235" r="10"/>
+            <circle cx="500" cy="239" r="12"/>
+            <circle cx="575" cy="260" r="9"/>
+          </g>
+          <rect x="438" y="158" width="24" height="92" rx="12" fill="#f5c85b"/>
+          <path d="M450 129c28 32 17 57 0 57s-28-25 0-57z" fill="#ff8f3f"/>
+        </g>
+        <text x="450" y="660" text-anchor="middle" font-family="Arial, sans-serif" font-size="34" font-weight="700" fill="#38241f">${label}</text>
+      </svg>
+    `;
+
+    return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
+  }
+
+  function getCart() {
+    try {
+      const cart = JSON.parse(localStorage.getItem(CART_KEY) || "[]");
+      return Array.isArray(cart) ? cart : [];
+    } catch (error) {
+      return [];
+    }
+  }
+
+  function saveCart(cart) {
+    localStorage.setItem(CART_KEY, JSON.stringify(Array.isArray(cart) ? cart : []));
+  }
+
+  function orderAddress(customer) {
+    return [
+      customer.address,
+      customer.landmark ? `Landmark: ${customer.landmark}` : "",
+      [customer.city, customer.state, customer.pincode].filter(Boolean).join(", ")
+    ]
+      .filter(Boolean)
+      .join("\n");
+  }
+
+  function buildEmailParams(order, data) {
+    const itemsText = order.items
+      .map((item) => {
+        const label = item.specialTitle ? `${item.name} - ${item.specialTitle}` : item.name;
+        return `${label} (${item.kg}) x ${item.qty} = ${formatPrice(item.lineTotal)}`;
+      })
+      .join("\n");
+    const customerDetails = [
+      `Name: ${order.customer.name}`,
+      `Email: ${order.customer.email}`,
+      `Phone: ${order.customer.phone}`,
+      `Address: ${orderAddress(order.customer)}`,
+      `Instructions: ${order.customer.instructions || "None"}`
+    ].join("\n");
+    const orderDetails = [
+      `Order ID: ${order.id}`,
+      `Order date: ${new Date(order.createdAt).toLocaleString()}`,
+      `Payment: ${order.paymentMethod}`,
+      "",
+      "Customer details:",
+      customerDetails,
+      "",
+      "Items:",
+      itemsText,
+      "",
+      `Total: ${formatPrice(order.total)}`
+    ].join("\n");
+
+    return {
+      bakery_name: data.settings.bakeryName,
+      owner_email: data.settings.ownerEmail,
+      order_id: order.id,
+      order_date: new Date(order.createdAt).toLocaleString(),
+      customer_name: order.customer.name,
+      customer_email: order.customer.email,
+      customer_phone: order.customer.phone,
+      customer_address: orderAddress(order.customer),
+      delivery_date: order.customer.deliveryDate,
+      instructions: order.customer.instructions || "None",
+      payment_method: order.paymentMethod,
+      items: itemsText,
+      order_total: formatPrice(order.total),
+      customer_details: customerDetails,
+      order_details: orderDetails,
+      to_email: order.customer.email,
+      reply_to: order.customer.email,
+      customer_message: `Thank you for your order. We received it successfully and will contact you very soon. Order ID: ${order.id}`,
+      owner_message: `New order received from ${order.customer.name}. Please contact the customer very soon.`,
+      customer_subject: `Order confirmation ${order.id}`,
+      owner_subject: `New cake order ${order.id}`
+    };
+  }
+
+  async function sendOrderEmails(order, data) {
+    const cfg = data.settings.emailjs || {};
+    const hasConfig =
+      cfg.publicKey && cfg.serviceId && cfg.customerTemplateId && cfg.ownerTemplateId && data.settings.ownerEmail;
+
+    if (!window.emailjs || !hasConfig) {
+      return {
+        sent: false,
+        message: "EmailJS is not configured yet. The order was saved in the admin dashboard."
+      };
+    }
+
+    try {
+      window.emailjs.init({ publicKey: cfg.publicKey });
+      const params = buildEmailParams(order, data);
+      const customerParams = {
+        ...params,
+        to_email: order.customer.email,
+        recipient_name: order.customer.name
+      };
+      const ownerParams = {
+        ...params,
+        to_email: data.settings.ownerEmail,
+        recipient_name: data.settings.bakeryName
+      };
+
+      const results = await Promise.allSettled([
+        window.emailjs.send(cfg.serviceId, cfg.customerTemplateId, customerParams),
+        window.emailjs.send(cfg.serviceId, cfg.ownerTemplateId, ownerParams)
+      ]);
+
+      const failed = results.find((result) => result.status === "rejected");
+      if (failed) {
+        throw failed.reason;
+      }
+
+      return { sent: true, message: "Confirmation emails were sent to the customer and owner." };
+    } catch (error) {
+      console.error("EmailJS send failed", error);
+      const providerMessage = error?.text || error?.message || String(error || "Unknown EmailJS error");
+      return {
+        sent: false,
+        message: `The order was saved, but email sending failed: ${providerMessage}`
+      };
+    }
+  }
+
+  window.BakeryData = {
+    STORAGE_KEY,
+    CART_KEY,
+    load: loadData,
+    save: saveData,
+    reset: resetData,
+    createId,
+    createOrderId,
+    formatPrice,
+    escapeHtml,
+    getProductImage,
+    getCart,
+    saveCart,
+    sendOrderEmails,
+    clone
+  };
+})();
