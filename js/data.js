@@ -388,11 +388,12 @@
             : settings.ownerEmail || defaults.settings.ownerEmail,
         emailjs: {
           ...defaults.settings.emailjs,
-          ...emailjs
+          ...emailjs,
           publicKey: emailjs.publicKey || defaults.settings.emailjs.publicKey,
           serviceId: emailjs.serviceId || defaults.settings.emailjs.serviceId,
           customerTemplateId: emailjs.customerTemplateId || defaults.settings.emailjs.customerTemplateId,
           ownerTemplateId: emailjs.ownerTemplateId || defaults.settings.emailjs.ownerTemplateId
+        }
       },
       categories: Array.isArray(data.categories) && data.categories.length ? data.categories : defaults.categories,
       products,
