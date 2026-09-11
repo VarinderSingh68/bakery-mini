@@ -1,0 +1,7 @@
+services:
+  - type: web
+    name: bakery-mini
+    runtime: static
+    buildCommand: ""
+    staticPublishPath: .
+    autoDeploy: true
