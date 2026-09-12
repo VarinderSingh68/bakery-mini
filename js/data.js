@@ -222,7 +222,6 @@
         variants: [
           { kg: "0.5 kg", price: row[4][0] },
           { kg: "1 kg", price: row[4][1] },
-          { kg: "1.5 kg", price: row[4][2] },
           { kg: "2 kg", price: row[4][3] }
         ],
         image: "",
@@ -243,7 +242,10 @@
           price: Number(variant.price) || 0
         };
       })
-      .filter((variant) => variant.kg && variant.price > 0);
+      .filter((variant) => {
+        const normalizedKg = variant.kg.toLowerCase().replace(/\s+/g, "");
+        return variant.kg && variant.price > 0 && normalizedKg !== "1.5kg";
+      });
   }
 
   function findProductByName(products, name) {
@@ -375,7 +377,14 @@
     const data = input && typeof input === "object" ? input : {};
     const settings = data.settings && typeof data.settings === "object" ? data.settings : {};
     const emailjs = settings.emailjs && typeof settings.emailjs === "object" ? settings.emailjs : {};
-    const products = Array.isArray(data.products) && data.products.length ? data.products : defaults.products;
+    const productSource = Array.isArray(data.products) && data.products.length ? data.products : defaults.products;
+    const products = productSource.map((product, index) => {
+      const fallbackProduct = defaults.products[index] || defaults.products[0];
+      return {
+        ...product,
+        variants: cleanVariants(product.variants, fallbackProduct.variants)
+      };
+    });
     const specialSource = Array.isArray(data.specials) ? data.specials : defaults.specials;
 
     return {
