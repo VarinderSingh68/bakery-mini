@@ -221,8 +221,7 @@
         details: row[3],
         variants: [
           { kg: "0.5 kg", price: row[4][0] },
-          { kg: "1 kg", price: row[4][1] },
-          { kg: "2 kg", price: row[4][3] }
+          { kg: "1 kg", price: row[4][1] }
         ],
         image: "",
         accent: theme[0],
@@ -244,7 +243,7 @@
       })
       .filter((variant) => {
         const normalizedKg = variant.kg.toLowerCase().replace(/\s+/g, "");
-        return variant.kg && variant.price > 0 && normalizedKg !== "1.5kg";
+        return variant.kg && variant.price > 0 && normalizedKg !== "1.5kg" && normalizedKg !== "2kg";
       });
   }
 
