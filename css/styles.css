@@ -1225,7 +1225,7 @@ body[data-page="admin"] {
     display: grid;
     grid-template-columns: minmax(0, 1fr) minmax(136px, 42%);
     gap: 12px;
-    min-height: 252px;
+    min-height: 300px;
     border: 0;
     border-bottom: 1px dashed rgba(71, 46, 38, 0.2);
     border-radius: 0;
@@ -1300,7 +1300,7 @@ body[data-page="admin"] {
 
   .product-action {
     position: absolute;
-    top: 166px;
+    top: 220px;
     right: 8px;
     z-index: 2;
     display: block;
