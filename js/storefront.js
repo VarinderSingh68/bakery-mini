@@ -30,6 +30,7 @@
     cartCount: document.getElementById("cartCount"),
     cartTotal: document.getElementById("cartTotal"),
     checkoutForm: document.getElementById("checkoutForm"),
+    addonList: document.getElementById("addonList"),
     checkoutMessage: document.getElementById("checkoutMessage"),
     placeOrder: document.getElementById("placeOrder"),
     footerContact: document.getElementById("footerContact")
@@ -41,6 +42,7 @@
     renderSpecials();
     renderProducts();
     renderCart();
+    renderAddOns();
     bindEvents();
   }
 
@@ -180,6 +182,7 @@
     elements.cartDrawer.addEventListener("click", handleDrawerClick);
     elements.cartItems.addEventListener("click", handleCartClick);
     elements.checkoutForm.addEventListener("submit", placeOrder);
+    elements.addonList.addEventListener("click", handleAddonClick);
 
     window.addEventListener("storage", (event) => {
       if (event.key === dataApi.STORAGE_KEY) {
@@ -188,6 +191,7 @@
         renderHero();
         renderSpecials();
         renderProducts();
+        renderAddOns();
         closeSpecialPreview();
       }
     });
@@ -383,6 +387,62 @@
     openCart();
   }
 
+  function renderAddOns() {
+    const addOns = (data.addOns || []).filter((addOn) => addOn.active !== false);
+    elements.addonList.innerHTML = addOns
+      .map((addOn) => {
+        const image = dataApi.getProductImage(addOn);
+        return `
+          <article class="addon-card">
+            <img src="${dataApi.escapeHtml(image)}" alt="${dataApi.escapeHtml(addOn.name)}" />
+            <div class="addon-copy">
+              <strong>${dataApi.escapeHtml(addOn.name)}</strong>
+              <p>${dataApi.escapeHtml(addOn.description)}</p>
+              <span>${dataApi.formatPrice(addOn.price)}</span>
+            </div>
+            <button class="ghost-button small addon-add" type="button" data-addon-id="${dataApi.escapeHtml(addOn.id)}">Add</button>
+          </article>
+        `;
+      })
+      .join("");
+  }
+
+  function handleAddonClick(event) {
+    const button = event.target.closest("[data-addon-id]");
+    if (!button) {
+      return;
+    }
+
+    const addOn = (data.addOns || []).find((item) => item.id === button.dataset.addonId);
+    if (!addOn) {
+      return;
+    }
+
+    const key = `addon:${addOn.id}`;
+    const existing = cart.find((item) => item.key === key);
+    if (existing) {
+      existing.qty += 1;
+    } else {
+      cart.push({
+        key,
+        addonId: addOn.id,
+        name: addOn.name,
+        addonCategory: "Party extra",
+        image: dataApi.getProductImage(addOn),
+        kg: "1 set",
+        price: Number(addOn.price) || 0,
+        qty: 1
+      });
+    }
+
+    dataApi.saveCart(cart);
+    renderCart();
+    button.textContent = "Added";
+    window.setTimeout(() => {
+      button.textContent = "Add";
+    }, 1200);
+  }
+
   function renderCart() {
     const count = cart.reduce((sum, item) => sum + item.qty, 0);
     const total = cartTotal();
@@ -406,7 +466,7 @@
         const special = item.specialId ? data.specials.find((entry) => entry.id === item.specialId) : null;
         const name = product ? product.name : item.name || special?.cakeName || "Cake";
         const image = product ? dataApi.getProductImage(product) : item.image || (special ? getSpecialImage(special) : dataApi.getProductImage({ name }));
-        const label = item.specialTitle || special?.title || "Cake menu";
+        const label = item.specialTitle || item.addonCategory || special?.title || "Cake menu";
         return `
           <article class="cart-item">
             <img src="${dataApi.escapeHtml(image)}" alt="${dataApi.escapeHtml(name)}" />

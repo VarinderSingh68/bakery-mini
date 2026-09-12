@@ -564,6 +564,74 @@
         "Premium Specials"
       ],
       products,
+      addOns: [
+        {
+          id: "addon-candles",
+          name: "Birthday Candles",
+          description: "Colorful candles for the celebration cake.",
+          price: 80,
+          image: "",
+          accent: "#d64f7f",
+          frosting: "#fff1f3",
+          cakeColor: "#f2b84b",
+          active: true
+        },
+        {
+          id: "addon-party-hats",
+          name: "Party Hats",
+          description: "A cheerful set of celebration hats.",
+          price: 120,
+          image: "",
+          accent: "#5661a7",
+          frosting: "#edf0ff",
+          cakeColor: "#2d7d78",
+          active: true
+        },
+        {
+          id: "addon-cake-pops",
+          name: "Cake Pops",
+          description: "Six bite-size cake pops for the dessert table.",
+          price: 240,
+          image: "",
+          accent: "#c47f22",
+          frosting: "#fff3ce",
+          cakeColor: "#b23a48",
+          active: true
+        },
+        {
+          id: "addon-balloons",
+          name: "Celebration Balloons",
+          description: "A colorful balloon set for the party corner.",
+          price: 180,
+          image: "",
+          accent: "#2d7d78",
+          frosting: "#effffc",
+          cakeColor: "#d64f7f",
+          active: true
+        },
+        {
+          id: "addon-greeting-card",
+          name: "Greeting Card",
+          description: "A small card for your personal celebration message.",
+          price: 60,
+          image: "",
+          accent: "#b23a48",
+          frosting: "#fff1f3",
+          cakeColor: "#c47f22",
+          active: true
+        },
+        {
+          id: "addon-party-set",
+          name: "Plates and Knife Set",
+          description: "Disposable plates, forks, and a cake knife.",
+          price: 150,
+          image: "",
+          accent: "#6d4c41",
+          frosting: "#f6eee8",
+          cakeColor: "#3d2b25",
+          active: true
+        }
+      ],
       specials: [
         {
           id: "special-birthday",
@@ -655,6 +723,7 @@
       },
       categories: Array.isArray(data.categories) && data.categories.length ? data.categories : defaults.categories,
       products,
+      addOns: Array.isArray(data.addOns) && data.addOns.length ? data.addOns : defaults.addOns,
       specials: specialSource.map((special, index) => normalizeSpecial(special, products, defaults.specials[index])),
       orders: Array.isArray(data.orders) ? data.orders : []
     };
