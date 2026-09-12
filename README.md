@@ -39,6 +39,7 @@ Set these Render environment variables before testing orders:
 - `OWNER_WHATSAPP_NUMBER`: owner WhatsApp number with country code
 - `WHATSAPP_CUSTOMER_TEMPLATE`: approved customer template name
 - `WHATSAPP_OWNER_TEMPLATE`: approved owner template name
+- `WHATSAPP_TEMPLATE_LANGUAGE`: template language code, normally `en_US`
 - `ADMIN_PASSCODE`: the same passcode used to open the admin dashboard
 
 `DATABASE_URL` is created automatically from the `bakery-db` Render Postgres

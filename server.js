@@ -177,7 +177,7 @@ app.get("/api/orders", async (request, response) => {
 
 app.post("/api/orders", async (request, response) => {
   const order = request.body;
-  if (!pool || !order?.id || !order.customer?.name || !order.customer?.phone || !Array.isArray(order.items) || !order.items.length) {
+  if (!pool || !order?.id || !order.customer?.name || !order.customer?.phone || order.customer.whatsappConsent !== "on" || !Array.isArray(order.items) || !order.items.length) {
     return response.status(400).json({ error: "Invalid order or database is not configured." });
   }
 
