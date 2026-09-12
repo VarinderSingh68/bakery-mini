@@ -1,6 +1,7 @@
 # Local development output
 server.*.log
 .refact/
+node_modules/
 
 # Editor and operating-system files
 .vscode/

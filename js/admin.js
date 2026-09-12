@@ -145,6 +145,24 @@
     renderSpecialList();
     renderOrderList();
     populateSettingsForm();
+    loadRemoteOrders();
+  }
+
+  async function loadRemoteOrders() {
+    try {
+      const response = await fetch("../api/orders", {
+        headers: { "x-admin-passcode": data.settings.adminPasscode }
+      });
+      if (!response.ok) {
+        return;
+      }
+      const result = await response.json();
+      data.orders = Array.isArray(result.orders) ? result.orders : data.orders;
+      renderStats();
+      renderOrderList();
+    } catch (error) {
+      console.warn("Remote orders unavailable", error);
+    }
   }
 
   function renderStats() {

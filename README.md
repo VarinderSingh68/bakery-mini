@@ -26,6 +26,27 @@ EmailJS settings are stored in browser `localStorage`, so configure them again
 from the deployed site's Admin dashboard. Do not commit mailbox passwords or
 other secrets to GitHub.
 
+## Render backend and WhatsApp invoices
+
+The Render deployment uses the Node service and Render Postgres. The backend
+stores every order, creates a PDF invoice, and sends the invoice to the
+customer's checkout phone number and the owner through WhatsApp Cloud API.
+
+Set these Render environment variables before testing orders:
+
+- `WHATSAPP_ACCESS_TOKEN`: Meta WhatsApp Cloud API permanent access token
+- `WHATSAPP_PHONE_NUMBER_ID`: Meta WhatsApp sender phone number ID
+- `OWNER_WHATSAPP_NUMBER`: owner WhatsApp number with country code
+- `WHATSAPP_CUSTOMER_TEMPLATE`: approved customer template name
+- `WHATSAPP_OWNER_TEMPLATE`: approved owner template name
+- `ADMIN_PASSCODE`: the same passcode used to open the admin dashboard
+
+`DATABASE_URL` is created automatically from the `bakery-db` Render Postgres
+database in `render.yaml`. The customer and owner WhatsApp templates must be
+approved by Meta and must contain the body variables expected by `server.js`.
+Customers must provide a WhatsApp-capable phone number and consent to receive
+the order message. Never commit the WhatsApp access token to the repository.
+
 Default admin passcode: `owner123`
 
 ## Email setup

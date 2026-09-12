@@ -516,17 +516,36 @@
       total: items.reduce((sum, item) => sum + item.lineTotal, 0)
     };
 
-    data = dataApi.load();
-    data.orders = [order, ...(data.orders || [])];
-    dataApi.save(data);
-
-    const emailResult = await dataApi.sendOrderEmails(order, data);
+    let deliveryMessage = "Order saved in this browser.";
+    try {
+      const response = await fetch("/api/orders", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(order)
+      });
+      const result = await response.json();
+      if (!response.ok || !result.saved) {
+        throw new Error(result.error || "The order could not be saved.");
+      }
+      deliveryMessage = result.whatsappSent
+        ? "Your invoice was sent to WhatsApp. We will contact you very soon."
+        : "Your order was saved, but WhatsApp delivery is not configured yet.";
+    } catch (error) {
+      data = dataApi.load();
+      data.orders = [order, ...(data.orders || [])];
+      dataApi.save(data);
+      const emailResult = await dataApi.sendOrderEmails(order, data);
+      deliveryMessage = emailResult.sent
+        ? emailResult.message
+        : "Your order was saved in this browser. Backend delivery is unavailable.";
+      console.error("Backend order save failed", error);
+    }
 
     cart = [];
     dataApi.saveCart(cart);
     renderCart();
     elements.checkoutForm.reset();
-    elements.checkoutMessage.textContent = `Order ${order.id} placed. ${emailResult.message}`;
+    elements.checkoutMessage.textContent = `Order ${order.id} placed. ${deliveryMessage}`;
     elements.placeOrder.textContent = "Place COD order";
     elements.placeOrder.disabled = false;
   }
