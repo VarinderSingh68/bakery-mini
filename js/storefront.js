@@ -7,6 +7,9 @@
   const selectedVariants = {};
   let activeSpecialId = "";
   let selectedSpecialVariantIndex = 0;
+  let heroProducts = [];
+  let heroIndex = 0;
+  let heroTimer;
 
   const elements = {
     productGrid: document.getElementById("productGrid"),
@@ -23,6 +26,9 @@
     specialVariantOptions: document.getElementById("specialVariantOptions"),
     addSpecialToCart: document.getElementById("addSpecialToCart"),
     heroCake: document.getElementById("heroCake"),
+    heroDots: document.getElementById("heroDots"),
+    heroPrevious: document.getElementById("heroPrevious"),
+    heroNext: document.getElementById("heroNext"),
     openCart: document.getElementById("openCart"),
     closeCart: document.getElementById("closeCart"),
     cartDrawer: document.getElementById("cartDrawer"),
@@ -60,10 +66,42 @@
   }
 
   function renderHero() {
-    const product = activeProducts()[0] || data.products[0];
-    if (product) {
-      elements.heroCake.src = dataApi.getProductImage(product);
+    heroProducts = activeProducts().slice(0, 3);
+    if (!heroProducts.length) {
+      return;
     }
+
+    elements.heroDots.innerHTML = heroProducts
+      .map((product, index) => `<button class="hero-dot ${index === heroIndex ? "active" : ""}" type="button" aria-label="Show ${dataApi.escapeHtml(product.name)}" data-hero-index="${index}"></button>`)
+      .join("");
+    elements.heroDots.querySelectorAll("[data-hero-index]").forEach((dot) => {
+      dot.addEventListener("click", () => showHero(Number(dot.dataset.heroIndex)));
+    });
+    showHero(heroIndex);
+    window.clearInterval(heroTimer);
+    heroTimer = window.setInterval(() => moveHero(1), 5000);
+  }
+
+  function showHero(index) {
+    if (!heroProducts.length) {
+      return;
+    }
+
+    heroIndex = (index + heroProducts.length) % heroProducts.length;
+    const product = heroProducts[heroIndex];
+    elements.heroCake.classList.add("changing");
+    window.setTimeout(() => {
+      elements.heroCake.src = dataApi.getProductImage(product);
+      elements.heroCake.alt = product.name;
+      elements.heroCake.classList.remove("changing");
+    }, 140);
+    elements.heroDots.querySelectorAll(".hero-dot").forEach((dot, dotIndex) => {
+      dot.classList.toggle("active", dotIndex === heroIndex);
+    });
+  }
+
+  function moveHero(direction) {
+    showHero(heroIndex + direction);
   }
 
   function getSpecialImage(special) {
@@ -183,6 +221,8 @@
     elements.cartItems.addEventListener("click", handleCartClick);
     elements.checkoutForm.addEventListener("submit", placeOrder);
     elements.addonList.addEventListener("click", handleAddonClick);
+    elements.heroPrevious.addEventListener("click", () => moveHero(-1));
+    elements.heroNext.addEventListener("click", () => moveHero(1));
 
     window.addEventListener("storage", (event) => {
       if (event.key === dataApi.STORAGE_KEY) {
