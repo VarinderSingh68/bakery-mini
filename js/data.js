@@ -207,6 +207,251 @@
       "Elegant rose cream cake for anniversaries and intimate parties.",
       "Vanilla sponge, rose cream, floral piping, white chocolate.",
       [640, 1160, 1710, 2240]
+    ],
+    [
+      "Hazelnut Praline Crunch",
+      "Chocolate Classics",
+      "Roasted hazelnut cream cake with a crisp praline finish.",
+      "Chocolate sponge, hazelnut cream, praline crunch, cocoa glaze.",
+      [680, 1240, 1820, 2380]
+    ],
+    [
+      "Dark Chocolate Cherry",
+      "Chocolate Classics",
+      "Dark chocolate cake layered with cherries and whipped cream.",
+      "Dark cocoa sponge, cherry filling, whipped cream, chocolate curls.",
+      [620, 1120, 1650, 2160]
+    ],
+    [
+      "Salted Caramel Chocolate",
+      "Chocolate Classics",
+      "Rich chocolate layers with smooth salted caramel buttercream.",
+      "Chocolate sponge, salted caramel, chocolate ganache, sea salt.",
+      [650, 1180, 1740, 2280]
+    ],
+    [
+      "Chocolate Orange Zest",
+      "Chocolate Classics",
+      "Bright orange zest meets deep chocolate in every slice.",
+      "Cocoa sponge, orange curd, chocolate cream, candied orange.",
+      [600, 1090, 1600, 2100]
+    ],
+    [
+      "Triple Chocolate Mousse",
+      "Chocolate Classics",
+      "A silky three-layer mousse cake for serious chocolate lovers.",
+      "Chocolate sponge, dark mousse, milk mousse, white chocolate.",
+      [720, 1320, 1940, 2520]
+    ],
+    [
+      "Espresso Fudge Cake",
+      "Chocolate Classics",
+      "Bold espresso and fudge combine in a smooth café-style cake.",
+      "Coffee cocoa sponge, espresso cream, fudge sauce, cocoa dust.",
+      [640, 1160, 1710, 2240]
+    ],
+    [
+      "Pistachio Rose Cake",
+      "Premium Specials",
+      "Delicate rose cream with pistachio crunch and a soft crumb.",
+      "Vanilla sponge, rose cream, pistachio praline, rose petals.",
+      [700, 1280, 1880, 2460]
+    ],
+    [
+      "Saffron Almond Cream",
+      "Premium Specials",
+      "A fragrant saffron cake finished with toasted almond flakes.",
+      "Saffron sponge, almond cream, cardamom, toasted almonds.",
+      [680, 1240, 1820, 2380]
+    ],
+    [
+      "Lotus Biscoff Dream",
+      "Premium Specials",
+      "Creamy biscuit spread cake with caramelized cookie crunch.",
+      "Vanilla sponge, Biscoff spread, biscuit cream, cookie crumb.",
+      [690, 1260, 1850, 2420]
+    ],
+    [
+      "Matcha White Chocolate",
+      "Premium Specials",
+      "Earthy matcha cream balanced with smooth white chocolate.",
+      "Vanilla sponge, matcha cream, white chocolate, almond crumb.",
+      [720, 1320, 1940, 2520]
+    ],
+    [
+      "Pecan Maple Cake",
+      "Premium Specials",
+      "Warm maple cream cake with toasted pecan texture.",
+      "Maple sponge, pecan praline, maple cream, caramel drizzle.",
+      [700, 1280, 1880, 2460]
+    ],
+    [
+      "Blueberry Lemon Bliss",
+      "Fruit Cakes",
+      "Fresh blueberry and lemon cream create a bright summer cake.",
+      "Vanilla sponge, blueberry compote, lemon cream, berry glaze.",
+      [590, 1060, 1560, 2040]
+    ],
+    [
+      "Raspberry White Chocolate",
+      "Fruit Cakes",
+      "Tart raspberry filling wrapped in white chocolate cream.",
+      "Vanilla sponge, raspberry compote, white chocolate cream.",
+      [650, 1180, 1740, 2280]
+    ],
+    [
+      "Peach Cream Garden",
+      "Fruit Cakes",
+      "Soft peach and cream cake with a light floral finish.",
+      "Vanilla sponge, peach compote, whipped cream, peach glaze.",
+      [570, 1020, 1500, 1960]
+    ],
+    [
+      "Lychee Rose Cloud",
+      "Fruit Cakes",
+      "A refreshing lychee cake with gentle rose cream.",
+      "Vanilla sponge, lychee pieces, rose cream, fruit glaze.",
+      [620, 1120, 1650, 2160]
+    ],
+    [
+      "Kiwi Lime Cream",
+      "Fruit Cakes",
+      "Zesty lime cream with bright kiwi pieces and vanilla layers.",
+      "Vanilla sponge, kiwi, lime cream, kiwi glaze.",
+      [560, 990, 1460, 1900]
+    ],
+    [
+      "Passion Fruit Mousse",
+      "Fruit Cakes",
+      "Tropical passion fruit mousse over a delicate vanilla base.",
+      "Vanilla sponge, passion fruit mousse, mango glaze.",
+      [680, 1240, 1820, 2380]
+    ],
+    [
+      "Cherry Almond Gateau",
+      "Fruit Cakes",
+      "Juicy cherry layers paired with almond cream and soft sponge.",
+      "Almond sponge, cherry compote, almond cream, toasted flakes.",
+      [640, 1160, 1710, 2240]
+    ],
+    [
+      "Apple Cinnamon Crumble",
+      "Fruit Cakes",
+      "Comforting apple cake with cinnamon cream and crisp crumble.",
+      "Cinnamon sponge, apple compote, cream, oat crumble.",
+      [540, 960, 1410, 1840]
+    ],
+    [
+      "Classic Coffee Cream",
+      "Cream Cakes",
+      "Light coffee cream cake with a gentle roasted finish.",
+      "Vanilla sponge, coffee cream, caramel drizzle, cocoa dust.",
+      [520, 940, 1380, 1800]
+    ],
+    [
+      "Honey Vanilla Silk",
+      "Cream Cakes",
+      "Soft vanilla cake sweetened with floral honey cream.",
+      "Vanilla sponge, honey cream, white chocolate curls.",
+      [450, 810, 1200, 1560]
+    ],
+    [
+      "Milk Cream Tres Leches",
+      "Cream Cakes",
+      "Moist milk-soaked sponge topped with a cloud of cream.",
+      "Vanilla sponge, three-milk soak, whipped cream, cinnamon.",
+      [560, 1020, 1500, 1960]
+    ],
+    [
+      "Vanilla Chai Cake",
+      "Cream Cakes",
+      "Warm chai spices folded into a smooth vanilla cream cake.",
+      "Chai sponge, vanilla cream, cardamom, cinnamon crumb.",
+      [500, 900, 1330, 1740]
+    ],
+    [
+      "Coconut Lime Cream",
+      "Cream Cakes",
+      "A cool coconut cake lifted with fresh lime and cream.",
+      "Coconut sponge, lime cream, coconut flakes, lime glaze.",
+      [560, 1010, 1490, 1940]
+    ],
+    [
+      "Almond Milk Cake",
+      "Cream Cakes",
+      "Tender almond sponge with delicate vanilla milk cream.",
+      "Almond sponge, milk cream, almond flakes, vanilla glaze.",
+      [550, 990, 1460, 1900]
+    ],
+    [
+      "Earl Grey Cream Cake",
+      "Cream Cakes",
+      "Fragrant Earl Grey tea cream gives this cake a refined finish.",
+      "Vanilla sponge, Earl Grey cream, bergamot glaze, white chocolate.",
+      [620, 1120, 1650, 2160]
+    ],
+    [
+      "Carrot Walnut Celebration",
+      "Celebration Cakes",
+      "Moist spiced carrot cake with cream cheese frosting.",
+      "Carrot sponge, walnuts, cream cheese frosting, cinnamon.",
+      [580, 1040, 1530, 2000]
+    ],
+    [
+      "Confetti Party Cake",
+      "Celebration Cakes",
+      "A cheerful sprinkle cake made for bright birthday tables.",
+      "Vanilla sponge, rainbow sprinkles, vanilla buttercream.",
+      [500, 900, 1330, 1740]
+    ],
+    [
+      "Princess Pink Cake",
+      "Celebration Cakes",
+      "Soft pink vanilla layers with playful piped decorations.",
+      "Vanilla sponge, strawberry cream, pink buttercream, sprinkles.",
+      [540, 970, 1430, 1860]
+    ],
+    [
+      "Blue Ocean Birthday Cake",
+      "Celebration Cakes",
+      "A cool blue celebration cake for ocean-loving dreamers.",
+      "Vanilla sponge, blue vanilla cream, fondant waves, sprinkles.",
+      [560, 1010, 1490, 1940]
+    ],
+    [
+      "Photo Memory Cake",
+      "Celebration Cakes",
+      "A smooth celebration cake designed for a favorite edible photo.",
+      "Vanilla sponge, buttercream, edible image finish, sprinkles.",
+      [620, 1120, 1650, 2160]
+    ],
+    [
+      "Baby Shower Vanilla",
+      "Celebration Cakes",
+      "A gentle vanilla celebration cake for welcoming a little one.",
+      "Vanilla sponge, pastel buttercream, white chocolate decorations.",
+      [590, 1060, 1560, 2040]
+    ],
+    [
+      "Graduation Chocolate Cake",
+      "Celebration Cakes",
+      "A rich chocolate cake for proud milestones and big achievements.",
+      "Chocolate sponge, fudge cream, chocolate plaque, cocoa glaze.",
+      [620, 1120, 1650, 2160]
+    ],
+    [
+      "Rose Pistachio Celebration",
+      "Celebration Cakes",
+      "A floral pistachio cake made for elegant family celebrations.",
+      "Pistachio sponge, rose cream, pistachio crumb, rose petals.",
+      [680, 1240, 1820, 2380]
+    ],
+    [
+      "Wedding White Chocolate",
+      "Celebration Cakes",
+      "A graceful white chocolate cake for intimate wedding tables.",
+      "Vanilla sponge, white chocolate cream, floral piping, berries.",
+      [760, 1380, 2020, 2640]
     ]
   ];
 
@@ -376,9 +621,14 @@
     const data = input && typeof input === "object" ? input : {};
     const settings = data.settings && typeof data.settings === "object" ? data.settings : {};
     const emailjs = settings.emailjs && typeof settings.emailjs === "object" ? settings.emailjs : {};
-    const productSource = Array.isArray(data.products) && data.products.length ? data.products : defaults.products;
+    const savedProducts = Array.isArray(data.products) ? data.products : [];
+    const savedProductIds = new Set(savedProducts.map((product) => product.id));
+    const productSource = [
+      ...savedProducts,
+      ...defaults.products.filter((product) => !savedProductIds.has(product.id))
+    ];
     const products = productSource.map((product, index) => {
-      const fallbackProduct = defaults.products[index] || defaults.products[0];
+      const fallbackProduct = defaults.products.find((entry) => entry.id === product.id) || defaults.products[index] || defaults.products[0];
       return {
         ...product,
         variants: cleanVariants(product.variants, fallbackProduct.variants)
