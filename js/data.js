@@ -543,6 +543,44 @@
     const festiveFields = specialProductFields(products, "Rasmalai Fusion");
 
     return {
+      banners: [
+        {
+          id: "banner-well-baked",
+          eyebrow: "Freshly baked today",
+          title: "Well Baked",
+          description: "Handcrafted cakes, rich chocolate layers, fresh fruit, and celebration flavors made for your sweetest moments.",
+          buttonLabel: "Explore cakes",
+          image: "",
+          accent: "#d64f7f",
+          frosting: "#fff1f3",
+          cakeColor: "#7b2d26",
+          active: true
+        },
+        {
+          id: "banner-celebrate",
+          eyebrow: "Make the moment sweeter",
+          title: "Celebrate Every Slice",
+          description: "Choose the perfect cake size and add party extras for birthdays, anniversaries, and every happy gathering.",
+          buttonLabel: "View celebration cakes",
+          image: "",
+          accent: "#c47f22",
+          frosting: "#fff3ce",
+          cakeColor: "#9b5a10",
+          active: true
+        },
+        {
+          id: "banner-specials",
+          eyebrow: "Limited celebration picks",
+          title: "Something Special",
+          description: "Discover premium flavors and special-day favorites prepared fresh for your table.",
+          buttonLabel: "See special cakes",
+          image: "",
+          accent: "#2d7d78",
+          frosting: "#effffc",
+          cakeColor: "#1f5b55",
+          active: true
+        }
+      ],
       settings: {
         bakeryName: "Sweet Layer Bakery",
         ownerEmail: "ngw.designer@gmail.com",
@@ -705,6 +743,7 @@
     const specialSource = Array.isArray(data.specials) ? data.specials : defaults.specials;
 
     return {
+      banners: Array.isArray(data.banners) && data.banners.length ? data.banners : defaults.banners,
       settings: {
         ...defaults.settings,
         ...settings,

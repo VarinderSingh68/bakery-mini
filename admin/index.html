@@ -37,6 +37,7 @@
             <button class="nav-link" type="button" data-panel="productsPanel">Products</button>
             <button class="nav-link" type="button" data-panel="categoriesPanel">Categories</button>
             <button class="nav-link" type="button" data-panel="specialsPanel">Special days</button>
+            <button class="nav-link" type="button" data-panel="bannersPanel">Banners</button>
             <button class="nav-link" type="button" data-panel="ordersPanel">Orders</button>
             <button class="nav-link" type="button" data-panel="settingsPanel">Settings</button>
           </nav>
@@ -221,6 +222,57 @@
               <div class="admin-card">
                 <h2>Special day slider</h2>
                 <div class="item-list" id="specialList"></div>
+              </div>
+            </div>
+          </section>
+
+          <section class="admin-panel" id="bannersPanel">
+            <div class="admin-layout">
+              <form class="admin-card stack-form" id="bannerForm">
+                <div class="card-head">
+                  <div>
+                    <p class="eyebrow">Hero banner editor</p>
+                    <h2 id="bannerFormTitle">Add banner</h2>
+                  </div>
+                  <button class="ghost-button" id="clearBannerForm" type="button">Clear</button>
+                </div>
+                <input name="id" type="hidden" />
+                <label>
+                  Eyebrow text
+                  <input name="eyebrow" type="text" placeholder="Example: Freshly baked today" required />
+                </label>
+                <label>
+                  Banner title
+                  <input name="title" type="text" required />
+                </label>
+                <label>
+                  Banner description
+                  <textarea name="description" rows="4" required></textarea>
+                </label>
+                <label>
+                  Button label
+                  <input name="buttonLabel" type="text" placeholder="Example: Explore cakes" required />
+                </label>
+                <label>
+                  Banner image
+                  <input name="image" type="file" accept="image/*" />
+                </label>
+                <img class="admin-preview banner-admin-preview" id="bannerImagePreview" alt="Banner preview" />
+                <label class="check-row">
+                  <input name="active" type="checkbox" checked />
+                  Show this banner in the slider
+                </label>
+                <button class="primary-button full" type="submit">Save banner</button>
+              </form>
+
+              <div class="admin-card">
+                <div class="card-head">
+                  <div>
+                    <p class="eyebrow">Homepage rotation</p>
+                    <h2>Banner list</h2>
+                  </div>
+                </div>
+                <div class="item-list" id="bannerList"></div>
               </div>
             </div>
           </section>

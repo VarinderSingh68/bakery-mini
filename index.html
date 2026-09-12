@@ -27,18 +27,20 @@
     </header>
 
     <main>
-      <section class="hero-section">
+      <section class="hero-section banner-hero" aria-label="Featured bakery banners">
         <div class="hero-copy">
-          <p class="eyebrow">Cash on delivery cakes</p>
-          <h1 data-brand-heading>Sweet Layer Bakery</h1>
-          <p>
-            Order soft, handcrafted cakes in different kg sizes. Fresh cream,
-            rich chocolate, fruit, and premium celebration flavors are ready
-            from the first screen.
-          </p>
+          <p class="eyebrow" id="heroEyebrow">Freshly baked today</p>
+          <h1 id="heroTitle">Well Baked</h1>
+          <p id="heroDescription">Handcrafted cakes, rich chocolate layers, fresh fruit, and celebration flavors made for your sweetest moments.</p>
+          <a class="primary-button hero-cta" id="heroCta" href="#cakes">Explore cakes</a>
         </div>
         <div class="hero-image-wrap" aria-hidden="true">
           <img id="heroCake" alt="" />
+        </div>
+        <div class="banner-controls">
+          <button class="icon-button" id="heroPrevious" type="button" aria-label="Previous banner">&#8592;</button>
+          <div class="hero-dots" id="heroDots" aria-label="Banner slides"></div>
+          <button class="icon-button" id="heroNext" type="button" aria-label="Next banner">&#8594;</button>
         </div>
       </section>
 

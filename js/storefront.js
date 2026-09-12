@@ -7,6 +7,8 @@
   const selectedVariants = {};
   let activeSpecialId = "";
   let selectedSpecialVariantIndex = 0;
+  let activeBannerIndex = 0;
+  let bannerTimer;
 
   const elements = {
     productGrid: document.getElementById("productGrid"),
@@ -23,6 +25,13 @@
     specialVariantOptions: document.getElementById("specialVariantOptions"),
     addSpecialToCart: document.getElementById("addSpecialToCart"),
     heroCake: document.getElementById("heroCake"),
+    heroEyebrow: document.getElementById("heroEyebrow"),
+    heroTitle: document.getElementById("heroTitle"),
+    heroDescription: document.getElementById("heroDescription"),
+    heroCta: document.getElementById("heroCta"),
+    heroDots: document.getElementById("heroDots"),
+    heroPrevious: document.getElementById("heroPrevious"),
+    heroNext: document.getElementById("heroNext"),
     openCart: document.getElementById("openCart"),
     closeCart: document.getElementById("closeCart"),
     cartDrawer: document.getElementById("cartDrawer"),
@@ -60,10 +69,48 @@
   }
 
   function renderHero() {
-    const product = activeProducts()[0] || data.products[0];
-    if (product) {
-      elements.heroCake.src = dataApi.getProductImage(product);
+    const banners = (data.banners || []).filter((banner) => banner.active !== false);
+    if (!banners.length) {
+      return;
     }
+
+    elements.heroDots.innerHTML = banners
+      .map((banner, index) => `<button class="hero-dot ${index === activeBannerIndex ? "active" : ""}" type="button" data-banner-index="${index}" aria-label="Show ${dataApi.escapeHtml(banner.title)}"></button>`)
+      .join("");
+    elements.heroDots.querySelectorAll("[data-banner-index]").forEach((dot) => {
+      dot.addEventListener("click", () => showBanner(Number(dot.dataset.bannerIndex)));
+    });
+    showBanner(activeBannerIndex, banners);
+    window.clearInterval(bannerTimer);
+    bannerTimer = window.setInterval(() => showBanner(activeBannerIndex + 1, banners), 5000);
+  }
+
+  function showBanner(index, banners = (data.banners || []).filter((banner) => banner.active !== false)) {
+    if (!banners.length) {
+      return;
+    }
+
+    activeBannerIndex = (index + banners.length) % banners.length;
+    const banner = banners[activeBannerIndex];
+    elements.heroEyebrow.textContent = banner.eyebrow;
+    elements.heroTitle.textContent = banner.title;
+    elements.heroDescription.textContent = banner.description;
+    elements.heroCta.textContent = banner.buttonLabel;
+    elements.heroCta.href = "#cakes";
+    elements.heroCake.classList.add("changing");
+    window.setTimeout(() => {
+      elements.heroCake.src = banner.image || dataApi.getProductImage({
+        name: banner.title,
+        accent: banner.accent,
+        frosting: banner.frosting,
+        cakeColor: banner.cakeColor
+      });
+      elements.heroCake.alt = banner.title;
+      elements.heroCake.classList.remove("changing");
+    }, 140);
+    elements.heroDots.querySelectorAll(".hero-dot").forEach((dot, dotIndex) => {
+      dot.classList.toggle("active", dotIndex === activeBannerIndex);
+    });
   }
 
   function getSpecialImage(special) {
@@ -183,6 +230,8 @@
     elements.cartItems.addEventListener("click", handleCartClick);
     elements.checkoutForm.addEventListener("submit", placeOrder);
     elements.addonList.addEventListener("click", handleAddonClick);
+    elements.heroPrevious.addEventListener("click", () => showBanner(activeBannerIndex - 1));
+    elements.heroNext.addEventListener("click", () => showBanner(activeBannerIndex + 1));
 
     window.addEventListener("storage", (event) => {
       if (event.key === dataApi.STORAGE_KEY) {
@@ -192,6 +241,7 @@
         renderSpecials();
         renderProducts();
         renderAddOns();
+        renderHero();
         closeSpecialPreview();
       }
     });

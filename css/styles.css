@@ -231,6 +231,11 @@ main {
   line-height: 1.65;
 }
 
+.hero-cta {
+  width: fit-content;
+  margin-top: 20px;
+}
+
 .hero-image-wrap {
   position: relative;
   display: grid;
@@ -245,6 +250,42 @@ main {
   object-fit: cover;
   box-shadow: 0 24px 52px rgba(76, 44, 35, 0.2);
   animation: cakeFloat 5.5s ease-in-out infinite;
+  transition: opacity 160ms ease, transform 160ms ease;
+}
+
+.hero-image-wrap img.changing {
+  opacity: 0;
+  transform: scale(1.03);
+}
+
+.banner-controls {
+  position: absolute;
+  right: clamp(24px, 5vw, 48px);
+  bottom: 24px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.hero-dots {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.hero-dot {
+  width: 8px;
+  height: 8px;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(47, 34, 31, 0.28);
+  transition: width 180ms ease, background 180ms ease;
+}
+
+.hero-dot.active {
+  width: 24px;
+  background: var(--rose);
 }
 
 .special-strip,
@@ -1013,6 +1054,10 @@ body[data-page="admin"] {
   border: 1px solid var(--line);
   border-radius: var(--radius);
   background: #fff;
+}
+
+.banner-admin-preview {
+  aspect-ratio: 1.9;
 }
 
 .check-row {

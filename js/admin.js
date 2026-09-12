@@ -5,6 +5,7 @@
   let data = dataApi.load();
   let currentProductImage = "";
   let currentSpecialImage = "";
+  let currentBannerImage = "";
 
   const newProductColors = [
     ["#b23a48", "#fff1f3", "#80303b"],
@@ -39,6 +40,11 @@
     addSpecialVariant: document.getElementById("addSpecialVariant"),
     specialList: document.getElementById("specialList"),
     specialImagePreview: document.getElementById("specialImagePreview"),
+    bannerForm: document.getElementById("bannerForm"),
+    bannerFormTitle: document.getElementById("bannerFormTitle"),
+    clearBannerForm: document.getElementById("clearBannerForm"),
+    bannerImagePreview: document.getElementById("bannerImagePreview"),
+    bannerList: document.getElementById("bannerList"),
     settingsForm: document.getElementById("settingsForm"),
     settingsMessage: document.getElementById("settingsMessage"),
     orderList: document.getElementById("orderList"),
@@ -54,6 +60,7 @@
     bindEvents();
     resetProductForm();
     resetSpecialForm();
+    resetBannerForm();
     populateSettingsForm();
 
     if (sessionStorage.getItem("bakery_admin_authenticated") === "yes") {
@@ -95,6 +102,16 @@
       });
     });
     elements.specialList.addEventListener("click", handleSpecialListClick);
+
+    elements.bannerForm.addEventListener("submit", handleBannerSubmit);
+    elements.clearBannerForm.addEventListener("click", resetBannerForm);
+    elements.bannerForm.elements.image.addEventListener("change", (event) => {
+      readImage(event.target.files[0], (image) => {
+        currentBannerImage = image;
+        elements.bannerImagePreview.src = image;
+      });
+    });
+    elements.bannerList.addEventListener("click", handleBannerListClick);
 
     elements.settingsForm.addEventListener("submit", handleSettingsSubmit);
     elements.resetData.addEventListener("click", handleResetData);
@@ -143,6 +160,7 @@
     renderProductList();
     renderCategoryList();
     renderSpecialList();
+    renderBannerList();
     renderOrderList();
     populateSettingsForm();
     loadRemoteOrders();
@@ -170,6 +188,108 @@
     elements.statCategories.textContent = String(data.categories.length);
     elements.statSpecials.textContent = String(data.specials.length);
     elements.statOrders.textContent = String(data.orders.length);
+  }
+
+  function resetBannerForm() {
+    currentBannerImage = "";
+    elements.bannerForm.reset();
+    elements.bannerForm.elements.id.value = "";
+    elements.bannerForm.elements.active.checked = true;
+    elements.bannerFormTitle.textContent = "Add banner";
+    elements.bannerImagePreview.src = dataApi.getProductImage({ name: "Banner", accent: "#d64f7f" });
+  }
+
+  function handleBannerSubmit(event) {
+    event.preventDefault();
+    const form = elements.bannerForm;
+    const id = form.elements.id.value;
+    const existing = data.banners.find((banner) => banner.id === id);
+    const fallback = newProductColors[data.banners.length % newProductColors.length];
+    const banner = {
+      id: id || dataApi.createId("banner"),
+      eyebrow: form.elements.eyebrow.value.trim(),
+      title: form.elements.title.value.trim(),
+      description: form.elements.description.value.trim(),
+      buttonLabel: form.elements.buttonLabel.value.trim(),
+      image: currentBannerImage,
+      accent: existing?.accent || fallback[0],
+      frosting: existing?.frosting || fallback[1],
+      cakeColor: existing?.cakeColor || fallback[2],
+      active: form.elements.active.checked
+    };
+
+    data.banners = existing
+      ? data.banners.map((item) => (item.id === id ? banner : item))
+      : [...data.banners, banner];
+    saveAndRefresh();
+    resetBannerForm();
+  }
+
+  function renderBannerList() {
+    if (!data.banners.length) {
+      elements.bannerList.innerHTML = `<div class="empty-state"><strong>No banners yet</strong><p>Add a banner for the homepage slider.</p></div>`;
+      return;
+    }
+
+    elements.bannerList.innerHTML = data.banners
+      .map((banner) => `
+        <article class="admin-item">
+          <img src="${dataApi.escapeHtml(banner.image || dataApi.getProductImage({ name: banner.title, accent: banner.accent }))}" alt="${dataApi.escapeHtml(banner.title)}" />
+          <div>
+            <strong>${dataApi.escapeHtml(banner.title)}</strong>
+            <span>${dataApi.escapeHtml(banner.eyebrow)}</span>
+            <p class="admin-item-details">${dataApi.escapeHtml(banner.description)}</p>
+            <small>${banner.active === false ? "Hidden from homepage" : "Visible on homepage"}</small>
+          </div>
+          <div class="item-actions">
+            <button class="ghost-button small" type="button" data-banner-action="edit" data-id="${dataApi.escapeHtml(banner.id)}">Edit</button>
+            <button class="ghost-button small" type="button" data-banner-action="toggle" data-id="${dataApi.escapeHtml(banner.id)}">${banner.active === false ? "Show" : "Hide"}</button>
+            <button class="danger-button small" type="button" data-banner-action="delete" data-id="${dataApi.escapeHtml(banner.id)}">Delete</button>
+          </div>
+        </article>
+      `)
+      .join("");
+  }
+
+  function handleBannerListClick(event) {
+    const button = event.target.closest("[data-banner-action]");
+    if (!button) {
+      return;
+    }
+
+    const banner = data.banners.find((item) => item.id === button.dataset.id);
+    if (!banner) {
+      return;
+    }
+
+    if (button.dataset.bannerAction === "edit") {
+      currentBannerImage = banner.image || "";
+      elements.bannerFormTitle.textContent = "Edit banner";
+      elements.bannerForm.elements.id.value = banner.id;
+      elements.bannerForm.elements.eyebrow.value = banner.eyebrow;
+      elements.bannerForm.elements.title.value = banner.title;
+      elements.bannerForm.elements.description.value = banner.description;
+      elements.bannerForm.elements.buttonLabel.value = banner.buttonLabel;
+      elements.bannerForm.elements.image.value = "";
+      elements.bannerForm.elements.active.checked = banner.active !== false;
+      elements.bannerImagePreview.src = banner.image || dataApi.getProductImage({ name: banner.title, accent: banner.accent });
+      showPanel("bannersPanel", "Banners");
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    if (button.dataset.bannerAction === "toggle") {
+      banner.active = banner.active === false;
+      saveAndRefresh();
+    }
+
+    if (button.dataset.bannerAction === "delete") {
+      const ok = window.confirm(`Delete ${banner.title}?`);
+      if (ok) {
+        data.banners = data.banners.filter((item) => item.id !== banner.id);
+        saveAndRefresh();
+        resetBannerForm();
+      }
+    }
   }
 
   function resetProductForm() {
