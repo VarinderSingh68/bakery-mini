@@ -186,6 +186,7 @@ main {
 }
 
 .hero-section {
+  position: relative;
   display: grid;
   grid-template-columns: minmax(0, 1.05fr) minmax(280px, 0.72fr);
   gap: clamp(20px, 4vw, 48px);
@@ -1325,6 +1326,27 @@ body[data-page="admin"] {
 
   .hero-section {
     margin-top: 12px;
+    padding-bottom: 76px;
+  }
+
+  .banner-controls {
+    right: 16px;
+    bottom: 16px;
+  }
+
+  .banner-controls .icon-button {
+    width: 38px;
+    height: 38px;
+  }
+
+  .section-heading {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .catalog-search {
+    width: 100%;
   }
 
   .hero-image-wrap {

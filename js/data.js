@@ -547,7 +547,7 @@
         {
           id: "banner-well-baked",
           eyebrow: "Freshly baked today",
-          title: "Well Baked",
+          title: "Sweet Layer Bakery",
           description: "Handcrafted cakes, rich chocolate layers, fresh fruit, and celebration flavors made for your sweetest moments.",
           buttonLabel: "Explore cakes",
           image: "",
@@ -743,7 +743,10 @@
     const specialSource = Array.isArray(data.specials) ? data.specials : defaults.specials;
 
     return {
-      banners: Array.isArray(data.banners) && data.banners.length ? data.banners : defaults.banners,
+      banners: (Array.isArray(data.banners) && data.banners.length ? data.banners : defaults.banners).map((banner) => ({
+        ...banner,
+        title: banner.title === "Well Baked" ? "Sweet Layer Bakery" : banner.title
+      })),
       settings: {
         ...defaults.settings,
         ...settings,
@@ -777,7 +780,9 @@
     }
 
     try {
-      return normalizeData(JSON.parse(raw));
+      const normalized = normalizeData(JSON.parse(raw));
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(normalized));
+      return normalized;
     } catch (error) {
       console.warn("Bakery data was reset because it could not be read.", error);
       const defaults = getDefaultData();
