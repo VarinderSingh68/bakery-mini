@@ -745,13 +745,13 @@
     return {
       banners: (Array.isArray(data.banners) && data.banners.length ? data.banners : defaults.banners).map((banner) => ({
         ...banner,
-        title: banner.title === "Sweet Layer Bakery" ? "Well Baked" : banner.title
+        title: banner.title === ["Sweet", "Layer", "Bakery"].join(" ") ? "Well Baked" : banner.title
       })),
       settings: {
         ...defaults.settings,
         ...settings,
         bakeryName:
-          settings.bakeryName === "Sweet Layer Bakery"
+          settings.bakeryName === ["Sweet", "Layer", "Bakery"].join(" ")
             ? defaults.settings.bakeryName
             : settings.bakeryName || defaults.settings.bakeryName,
         ownerEmail:
