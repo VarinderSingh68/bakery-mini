@@ -9,6 +9,7 @@
   let selectedSpecialVariantIndex = 0;
   let activeBannerIndex = 0;
   let bannerTimer;
+  let productSearchTerm = "";
 
   const elements = {
     productGrid: document.getElementById("productGrid"),
@@ -42,7 +43,9 @@
     addonList: document.getElementById("addonList"),
     checkoutMessage: document.getElementById("checkoutMessage"),
     placeOrder: document.getElementById("placeOrder"),
-    footerContact: document.getElementById("footerContact")
+    footerContact: document.getElementById("footerContact"),
+    productSearch: document.getElementById("productSearch"),
+    catalogCount: document.getElementById("catalogCount")
   };
 
   function init() {
@@ -161,12 +164,31 @@
 
   function renderProducts() {
     const products = activeProducts();
-    const eyebrow = document.querySelector(".catalog-section .eyebrow");
-    if (eyebrow) {
-      eyebrow.textContent = `${products.length} cakes available`;
+    const filteredProducts = productSearchTerm
+      ? products.filter((product) => {
+          const searchableText = [product.name, product.category, product.description, product.details]
+            .filter(Boolean)
+            .join(" ")
+            .toLowerCase();
+          return searchableText.includes(productSearchTerm);
+        })
+      : products;
+
+    elements.catalogCount.textContent = productSearchTerm
+      ? `${filteredProducts.length} of ${products.length} cakes found`
+      : `${products.length} cakes available`;
+
+    if (!filteredProducts.length) {
+      elements.productGrid.innerHTML = `
+        <div class="empty-state catalog-empty">
+          <strong>No cakes found</strong>
+          <p>Try another cake name, flavor, or category.</p>
+        </div>
+      `;
+      return;
     }
 
-    elements.productGrid.innerHTML = products
+    elements.productGrid.innerHTML = filteredProducts
       .map((product, index) => productCardTemplate(product, index))
       .join("");
 
@@ -230,6 +252,10 @@
     elements.cartItems.addEventListener("click", handleCartClick);
     elements.checkoutForm.addEventListener("submit", placeOrder);
     elements.addonList.addEventListener("click", handleAddonClick);
+    elements.productSearch.addEventListener("input", (event) => {
+      productSearchTerm = event.target.value.trim().toLowerCase();
+      renderProducts();
+    });
     elements.heroPrevious.addEventListener("click", () => showBanner(activeBannerIndex - 1));
     elements.heroNext.addEventListener("click", () => showBanner(activeBannerIndex + 1));
 
