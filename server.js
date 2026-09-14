@@ -185,7 +185,7 @@ app.post("/api/orders", async (request, response) => {
     await pool.query(
       `INSERT INTO orders (id, created_at, status, payment_method, customer, items, total)
        VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-      [order.id, order.createdAt, order.status || "New", order.paymentMethod || "Cash on Delivery", order.customer, order.items, order.total]
+      [order.id, order.createdAt, order.status || "New", order.paymentMethod || "Order payment", order.customer, order.items, order.total]
     );
     const pdf = await createInvoicePdf(order);
     await deliverOrderOnWhatsApp(order, pdf);

@@ -710,7 +710,7 @@
 
   function renderOrderList() {
     if (!data.orders.length) {
-      elements.orderList.innerHTML = `<div class="empty-state"><strong>No orders yet</strong><p>New COD orders from the website will appear here.</p></div>`;
+      elements.orderList.innerHTML = `<div class="empty-state"><strong>No orders yet</strong><p>New customer orders from the website will appear here.</p></div>`;
       return;
     }
 

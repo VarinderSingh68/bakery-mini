@@ -530,7 +530,7 @@
       elements.cartItems.innerHTML = `
         <div class="empty-state">
           <strong>Your cart is empty</strong>
-          <p>Add a cake from the menu to place a Cash on Delivery order.</p>
+          <p>Add a cake from the menu to place your order.</p>
         </div>
       `;
       return;
@@ -646,7 +646,7 @@
       id: dataApi.createOrderId(),
       createdAt: new Date().toISOString(),
       status: "New",
-      paymentMethod: "Cash on Delivery",
+      paymentMethod: "Order payment",
       customer,
       items,
       total: items.reduce((sum, item) => sum + item.lineTotal, 0)
@@ -682,7 +682,7 @@
     renderCart();
     elements.checkoutForm.reset();
     elements.checkoutMessage.textContent = `Order ${order.id} placed. ${deliveryMessage}`;
-    elements.placeOrder.textContent = "Place COD order";
+    elements.placeOrder.textContent = "Place your order";
     elements.placeOrder.disabled = false;
   }
 
