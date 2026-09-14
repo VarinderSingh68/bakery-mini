@@ -289,6 +289,48 @@ main {
   background: var(--rose);
 }
 
+.contact-ribbon {
+  width: min(1180px, calc(100% - 32px));
+  margin: 18px auto 0;
+  overflow: hidden;
+  border: 1px solid rgba(200, 76, 97, 0.2);
+  border-radius: 999px;
+  color: var(--rose-dark);
+  background: linear-gradient(100deg, rgba(255, 247, 237, 0.94), rgba(255, 232, 235, 0.96), rgba(232, 255, 248, 0.94));
+  box-shadow: 0 8px 22px rgba(55, 34, 27, 0.08);
+}
+
+.contact-ribbon-track {
+  display: flex;
+  width: max-content;
+  align-items: center;
+  gap: 24px;
+  min-height: 42px;
+  padding: 0 20px;
+  animation: slideContact 28s linear infinite;
+  white-space: nowrap;
+}
+
+.contact-ribbon-track span {
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.contact-ribbon-track b {
+  color: var(--rose-dark);
+  font-size: 0.86rem;
+}
+
+.contact-ribbon-track span[aria-hidden="true"] {
+  color: var(--gold);
+  font-size: 1.1rem;
+}
+
+.contact-ribbon:hover .contact-ribbon-track {
+  animation-play-state: paused;
+}
+
 .special-strip,
 .catalog-section,
 .site-footer {
@@ -1248,6 +1290,15 @@ body[data-page="admin"] {
   }
 }
 
+@keyframes slideContact {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
 @keyframes panelIn {
   from {
     opacity: 0;
@@ -1359,8 +1410,19 @@ body[data-page="admin"] {
 
   .special-strip,
   .catalog-section,
-  .site-footer {
+  .site-footer,
+  .contact-ribbon {
     width: min(100% - 20px, 1180px);
+  }
+
+  .contact-ribbon {
+    margin-top: 14px;
+  }
+
+  .contact-ribbon-track {
+    gap: 16px;
+    min-height: 40px;
+    padding-inline: 14px;
   }
 
   .special-strip {
