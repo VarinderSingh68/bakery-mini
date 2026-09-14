@@ -1,4 +1,4 @@
-# Sweet Layer Bakery
+# Well Baked
 
 Simple bakery website built with plain HTML, CSS, and JavaScript.
 

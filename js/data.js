@@ -547,7 +547,7 @@
         {
           id: "banner-well-baked",
           eyebrow: "Freshly baked today",
-          title: "Sweet Layer Bakery",
+          title: "Well Baked",
           description: "Handcrafted cakes, rich chocolate layers, fresh fruit, and celebration flavors made for your sweetest moments.",
           buttonLabel: "Explore cakes",
           image: "",
@@ -582,7 +582,7 @@
         }
       ],
       settings: {
-        bakeryName: "Sweet Layer Bakery",
+        bakeryName: "Well Baked",
         ownerEmail: "ngw.designer@gmail.com",
         phone: "+91 98765 43210",
         address: "Cake Street, Your City",
@@ -745,11 +745,15 @@
     return {
       banners: (Array.isArray(data.banners) && data.banners.length ? data.banners : defaults.banners).map((banner) => ({
         ...banner,
-        title: banner.title === ["Well", "Baked"].join(" ") ? "Sweet Layer Bakery" : banner.title
+        title: banner.title === "Sweet Layer Bakery" ? "Well Baked" : banner.title
       })),
       settings: {
         ...defaults.settings,
         ...settings,
+        bakeryName:
+          settings.bakeryName === "Sweet Layer Bakery"
+            ? defaults.settings.bakeryName
+            : settings.bakeryName || defaults.settings.bakeryName,
         ownerEmail:
           settings.ownerEmail === "owner@example.com"
             ? defaults.settings.ownerEmail

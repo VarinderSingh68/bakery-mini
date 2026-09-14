@@ -40,7 +40,7 @@ function createInvoicePdf(order) {
     document.on("end", () => resolve(Buffer.concat(chunks)));
     document.on("error", reject);
 
-    document.fontSize(24).fillColor("#9f3449").text("Sweet Layer Bakery");
+    document.fontSize(24).fillColor("#9f3449").text("Well Baked");
     document.moveDown(0.4);
     document.fontSize(18).fillColor("#222222").text("Order Invoice");
     document.moveDown();
@@ -151,7 +151,7 @@ async function deliverOrderOnWhatsApp(order, pdf) {
   const details = `${order.id} | ${order.customer.name} | ${money(order.total)}`;
   await Promise.all([
     sendWhatsAppMessage(customerNumber, customerTemplate, [order.customer.name, order.id]),
-    sendWhatsAppDocument(customerNumber, mediaId, "Your Sweet Layer Bakery invoice"),
+    sendWhatsAppDocument(customerNumber, mediaId, "Your Well Baked invoice"),
     sendWhatsAppMessage(ownerNumber, ownerTemplate, [order.id, order.customer.name, order.customer.phone, money(order.total), details]),
     sendWhatsAppDocument(ownerNumber, mediaId, "New bakery order invoice")
   ]);
