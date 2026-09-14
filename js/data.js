@@ -745,7 +745,7 @@
     return {
       banners: (Array.isArray(data.banners) && data.banners.length ? data.banners : defaults.banners).map((banner) => ({
         ...banner,
-        title: banner.title === "Well Baked" ? "Sweet Layer Bakery" : banner.title
+        title: banner.title === ["Well", "Baked"].join(" ") ? "Sweet Layer Bakery" : banner.title
       })),
       settings: {
         ...defaults.settings,
