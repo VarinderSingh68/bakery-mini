@@ -774,21 +774,45 @@
     };
   }
 
-  function stripImages(value) {
-    if (Array.isArray(value)) {
-      return value.map(stripImages);
-    }
-    if (value && typeof value === "object") {
-      const copy = {};
-      for (const key of Object.keys(value)) {
-        copy[key] = stripImages(value[key]);
-        if (key === "image" && typeof copy[key] === "string" && copy[key].startsWith("data:")) {
-          copy[key] = "";
-        }
+  function pruneImagesToFit(data, targetSize) {
+    // Storage is ~5MB. When a save overflows, drop only the largest embedded
+    // photos (image URLs and small images stay) until the payload fits,
+    // instead of wiping every image in the catalog.
+    const payload = JSON.parse(JSON.stringify(data));
+    const items = [];
+    const collect = (container) => {
+      if (!container || typeof container !== "object") {
+        return;
       }
-      return copy;
+      if (Array.isArray(container)) {
+        container.forEach(collect);
+        return;
+      }
+      const image = container.image;
+      if (typeof image === "string" && image.startsWith("data:") && image.length > 60 * 1024) {
+        items.push({ object: container, label: container.name || container.title || "an item" });
+      }
+      Object.keys(container).forEach((key) => {
+        if (key !== "image") {
+          collect(container[key]);
+        }
+      });
+    };
+    collect(payload);
+    const dropped = [];
+    items.sort((a, b) => b.object.image.length - a.object.image.length);
+    let size = JSON.stringify(payload).length;
+    for (const item of items) {
+      if (size <= targetSize) {
+        break;
+      }
+      size -= item.object.image.length;
+      item.object.image = "";
+      if (!dropped.includes(item.label)) {
+        dropped.push(item.label);
+      }
     }
-    return value;
+    return { data: payload, dropped };
   }
 
   function loadData() {
@@ -817,20 +841,22 @@
       localStorage.setItem(STORAGE_KEY, JSON.stringify(normalized));
       return { ok: true };
     } catch (error) {
-      // Most commonly QuotaExceededError: localStorage is ~5MB and base64
-      // images are big. Retry once without images so names, prices, and
-      // orders still save. Callers can show result.warning to the user.
-      console.warn("Bakery save failed, retrying without images.", error);
+      // Most commonly QuotaExceededError: localStorage is ~5MB total and
+      // base64 photos are large. Prune the largest embedded images until the
+      // payload fits, so names, prices, and orders always save and only a
+      // few photos are dropped (the owner can re-upload them).
+      console.warn("Bakery save exceeded storage, pruning largest images.", error);
       try {
-        const withoutImages = stripImages(normalized);
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(withoutImages));
+        const pruned = pruneImagesToFit(normalized, 4.5 * 1024 * 1024);
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(pruned.data));
+        const droppedList = pruned.dropped.length ? " (" + pruned.dropped.join(", ") + ")" : "";
         return {
           ok: true,
-          warning: "Saved, but this browser's storage is full, so product images were removed. Use smaller photos (under ~300 KB) and re-upload them."
+          warning: "Storage was full, so " + pruned.dropped.length + " largest photo(s) were removed to make room" + droppedList + ". Everything else saved fine - re-upload those photos, or use image links instead of uploads."
         };
       } catch (retryError) {
-        console.error("Bakery save failed even without images.", retryError);
-        return { ok: false, error: "Could not save in this browser. Storage may be full or blocked (private mode?). Delete old products/orders or use a normal browser window." };
+        console.error("Bakery save failed even after pruning images.", retryError);
+        return { ok: false, error: "Could not save in this browser. Storage may be full or blocked (private mode?). Free up space by deleting old items/orders, or use a normal browser window." };
       }
     }
   }

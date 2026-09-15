@@ -90,6 +90,7 @@
         elements.productImagePreview.src = image;
       });
     });
+    elements.productForm.elements.imageUrl.addEventListener("input", handleProductImageUrlInput);
     elements.productList.addEventListener("click", handleProductListClick);
 
     elements.categoryForm.addEventListener("submit", handleCategorySubmit);
@@ -105,6 +106,7 @@
         elements.specialImagePreview.src = image;
       });
     });
+    elements.specialForm.elements.imageUrl.addEventListener("input", handleSpecialImageUrlInput);
     elements.specialList.addEventListener("click", handleSpecialListClick);
 
     elements.bannerForm.addEventListener("submit", handleBannerSubmit);
@@ -115,6 +117,7 @@
         elements.bannerImagePreview.src = image;
       });
     });
+    elements.bannerForm.elements.imageUrl.addEventListener("input", handleBannerImageUrlInput);
     elements.bannerList.addEventListener("click", handleBannerListClick);
 
     elements.settingsForm.addEventListener("submit", handleSettingsSubmit);
@@ -799,10 +802,37 @@
     }
   }
 
+  function normalizeImageUrl(value) {
+    let url = String(value || "").trim();
+    if (!url) { return ""; }
+    const driveMatch = url.match("/drive\.google\.com\/file\/d\/([^/]+)");
+    if (driveMatch) { url = "https://drive.google.com/uc?export=view&id=" + driveMatch[1]; }
+    return url;
+  }
+
+  function applyImageUrlInput(value, setImage, previewElement, fallbackItem) {
+    const url = normalizeImageUrl(value);
+    const usable = RegExp("^https?://").test(url);
+    setImage(usable ? url : "");
+    previewElement.src = usable ? url : dataApi.getProductImage(fallbackItem);
+  }
+
+  function handleProductImageUrlInput(event) {
+    applyImageUrlInput(event.target.value, (url) => { currentProductImage = url; }, elements.productImagePreview, { name: "New Cake" });
+  }
+
+  function handleSpecialImageUrlInput(event) {
+    applyImageUrlInput(event.target.value, (url) => { currentSpecialImage = url; }, elements.specialImagePreview, { name: "Special Cake", accent: "#d64f7f" });
+  }
+
+  function handleBannerImageUrlInput(event) {
+    applyImageUrlInput(event.target.value, (url) => { currentBannerImage = url; }, elements.bannerImagePreview, { name: "Banner", accent: "#d64f7f" });
+  }
+
   function drawScaledCanvas(sourceWidth, sourceHeight, draw) {
     // Phone photos are 2-5 MB, but browser storage only holds ~5 MB TOTAL.
-    // Downscale to 1200px and re-encode as JPEG so uploads always fit.
-    const maxSide = 1200;
+    // Downscale to 900px and re-encode as JPEG so a whole photo catalog fits.
+    const maxSide = 900;
     const scale = Math.min(1, maxSide / Math.max(sourceWidth, sourceHeight));
     const width = Math.max(1, Math.round(sourceWidth * scale));
     const height = Math.max(1, Math.round(sourceHeight * scale));
@@ -816,7 +846,7 @@
     context.fillStyle = "#ffffff";
     context.fillRect(0, 0, width, height);
     draw(context, width, height);
-    return canvas.toDataURL("image/jpeg", 0.82);
+    return canvas.toDataURL("image/jpeg", 0.75);
   }
 
   function compressImageFile(file, dataUrl) {
@@ -875,8 +905,8 @@
       const dataUrl = String(reader.result || "");
       compressImageFile(file, dataUrl).then((compressed) => {
         const chosen = compressed.length < dataUrl.length ? compressed : dataUrl;
-        if (chosen.length > 1.5 * 1024 * 1024) {
-          alert("This image is very large and may not save in the browser. If saving fails, use a smaller photo.");
+        if (chosen.length > 1024 * 1024) {
+          alert("This image is still very large after compression and may not save. Try a different photo, or use an image link (URL) instead of an upload.");
         }
         onLoad(chosen);
       });
