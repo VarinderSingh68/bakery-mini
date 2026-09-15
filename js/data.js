@@ -775,6 +775,23 @@
     };
   }
 
+  function stripImages(value) {
+    if (Array.isArray(value)) {
+      return value.map(stripImages);
+    }
+    if (value && typeof value === "object") {
+      const copy = {};
+      for (const key of Object.keys(value)) {
+        copy[key] = stripImages(value[key]);
+        if (key === "image" && typeof copy[key] === "string" && copy[key].startsWith("data:")) {
+          copy[key] = "";
+        }
+      }
+      return copy;
+    }
+    return value;
+  }
+
   function loadData() {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) {
@@ -796,7 +813,27 @@
   }
 
   function saveData(data) {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(normalizeData(data)));
+    const normalized = normalizeData(data);
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(normalized));
+      return { ok: true };
+    } catch (error) {
+      // Most commonly QuotaExceededError: localStorage is ~5MB and base64
+      // images are big. Retry once without images so names, prices, and
+      // orders still save. Callers can show result.warning to the user.
+      console.warn("Bakery save failed, retrying without images.", error);
+      try {
+        const withoutImages = stripImages(normalized);
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(withoutImages));
+        return {
+          ok: true,
+          warning: "Saved, but this browser's storage is full, so product images were removed. Use smaller photos (under ~300 KB) and re-upload them."
+        };
+      } catch (retryError) {
+        console.error("Bakery save failed even without images.", retryError);
+        return { ok: false, error: "Could not save in this browser. Storage may be full or blocked (private mode?). Delete old products/orders or use a normal browser window." };
+      }
+    }
   }
 
   function resetData() {

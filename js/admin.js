@@ -25,6 +25,7 @@
     navLinks: document.querySelectorAll(".nav-link"),
     panels: document.querySelectorAll(".admin-panel"),
     productForm: document.getElementById("productForm"),
+    productFormMessage: document.getElementById("productFormMessage"),
     productFormTitle: document.getElementById("productFormTitle"),
     clearProductForm: document.getElementById("clearProductForm"),
     productList: document.getElementById("productList"),
@@ -34,6 +35,7 @@
     categoryForm: document.getElementById("categoryForm"),
     categoryList: document.getElementById("categoryList"),
     specialForm: document.getElementById("specialForm"),
+    specialFormMessage: document.getElementById("specialFormMessage"),
     specialFormTitle: document.getElementById("specialFormTitle"),
     clearSpecialForm: document.getElementById("clearSpecialForm"),
     specialVariantEditor: document.getElementById("specialVariantEditor"),
@@ -41,6 +43,7 @@
     specialList: document.getElementById("specialList"),
     specialImagePreview: document.getElementById("specialImagePreview"),
     bannerForm: document.getElementById("bannerForm"),
+    bannerFormMessage: document.getElementById("bannerFormMessage"),
     bannerFormTitle: document.getElementById("bannerFormTitle"),
     clearBannerForm: document.getElementById("clearBannerForm"),
     bannerImagePreview: document.getElementById("bannerImagePreview"),
@@ -145,6 +148,12 @@
     refreshAll();
   }
 
+  function setFormMessage(element, message) {
+    if (element) {
+      element.textContent = message || "";
+    }
+  }
+
   function showPanel(panelId, title) {
     elements.panels.forEach((panel) => panel.classList.toggle("active", panel.id === panelId));
     elements.navLinks.forEach((button) => button.classList.toggle("active", button.dataset.panel === panelId));
@@ -192,6 +201,7 @@
 
   function resetBannerForm() {
     currentBannerImage = "";
+    setFormMessage(elements.bannerFormMessage, "");
     elements.bannerForm.reset();
     elements.bannerForm.elements.id.value = "";
     elements.bannerForm.elements.active.checked = true;
@@ -221,8 +231,13 @@
     data.banners = existing
       ? data.banners.map((item) => (item.id === id ? banner : item))
       : [...data.banners, banner];
-    saveAndRefresh();
+    const result = saveAndRefresh();
+    if (!result.ok) {
+      setFormMessage(elements.bannerFormMessage, result.error);
+      return;
+    }
     resetBannerForm();
+    setFormMessage(elements.bannerFormMessage, result.warning || "Banner saved.");
   }
 
   function renderBannerList() {
@@ -294,6 +309,7 @@
 
   function resetProductForm() {
     currentProductImage = "";
+    setFormMessage(elements.productFormMessage, "");
     elements.productForm.reset();
     elements.productForm.elements.id.value = "";
     elements.productForm.elements.active.checked = true;
@@ -354,6 +370,8 @@
       return;
     }
 
+    setFormMessage(elements.productFormMessage, "Saving...");
+
     const existing = data.products.find((product) => product.id === id);
     const colorSet = existing ? [existing.accent, existing.frosting, existing.cakeColor] : newProductColors[data.products.length % newProductColors.length];
     const product = {
@@ -377,8 +395,13 @@
     }
 
     ensureCategory(product.category);
-    saveAndRefresh();
+    const result = saveAndRefresh();
+    if (!result.ok) {
+      setFormMessage(elements.productFormMessage, result.error); // keep the form filled so nothing is lost
+      return;
+    }
     resetProductForm();
+    setFormMessage(elements.productFormMessage, result.warning || `"${product.name}" saved.`);
   }
 
   function renderProductList() {
@@ -541,6 +564,7 @@
 
   function resetSpecialForm() {
     currentSpecialImage = "";
+    setFormMessage(elements.specialFormMessage, "");
     elements.specialForm.reset();
     elements.specialForm.elements.id.value = "";
     elements.specialForm.elements.active.checked = true;
@@ -562,6 +586,8 @@
       alert("Please add at least one special kg and price row.");
       return;
     }
+
+    setFormMessage(elements.specialFormMessage, "Saving...");
 
     const existing = data.specials.find((special) => special.id === id);
     const special = {
@@ -585,8 +611,13 @@
       data.specials.push(special);
     }
 
-    saveAndRefresh();
+    const result = saveAndRefresh();
+    if (!result.ok) {
+      setFormMessage(elements.specialFormMessage, result.error);
+      return;
+    }
     resetSpecialForm();
+    setFormMessage(elements.specialFormMessage, result.warning || "Special item saved.");
   }
 
   function renderSpecialList() {
@@ -701,8 +732,8 @@
         ownerTemplateId: form.elements.ownerTemplateId.value.trim()
       }
     };
-    saveAndRefresh();
-    elements.settingsMessage.textContent = "Settings saved.";
+    const result = saveAndRefresh();
+    elements.settingsMessage.textContent = result.ok ? "Settings saved." : "Settings were not saved.";
     setTimeout(() => {
       elements.settingsMessage.textContent = "";
     }, 2500);
@@ -778,13 +809,55 @@
     }
 
     const reader = new FileReader();
-    reader.addEventListener("load", () => onLoad(reader.result));
+    reader.addEventListener("load", () => {
+      const dataUrl = String(reader.result || "");
+      if (typeof window.createImageBitmap !== "function") {
+        onLoad(dataUrl);
+        return;
+      }
+
+      // Phone photos are 2-5 MB, but browser storage only holds ~5 MB TOTAL.
+      // Downscale to 1200px and re-encode as JPEG so uploads always fit.
+      window.createImageBitmap(file)
+        .then((bitmap) => {
+          const maxSide = 1200;
+          const scale = Math.min(1, maxSide / Math.max(bitmap.width, bitmap.height));
+          const width = Math.max(1, Math.round(bitmap.width * scale));
+          const height = Math.max(1, Math.round(bitmap.height * scale));
+          const canvas = document.createElement("canvas");
+          canvas.width = width;
+          canvas.height = height;
+          const context = canvas.getContext("2d");
+          if (!context) {
+            bitmap.close?.();
+            onLoad(dataUrl);
+            return;
+          }
+          context.fillStyle = "#ffffff";
+          context.fillRect(0, 0, width, height);
+          context.drawImage(bitmap, 0, 0, width, height);
+          bitmap.close?.();
+          const compressed = canvas.toDataURL("image/jpeg", 0.82);
+          if (compressed.length < dataUrl.length || dataUrl.length > 400 * 1024) {
+            onLoad(compressed);
+          } else {
+            onLoad(dataUrl);
+          }
+        })
+        .catch(() => onLoad(dataUrl));
+    });
     reader.readAsDataURL(file);
   }
 
   function saveAndRefresh() {
-    dataApi.save(data);
+    const result = dataApi.save(data);
     refreshAll();
+    if (!result.ok) {
+      alert(result.error);
+    } else if (result.warning) {
+      alert(result.warning);
+    }
+    return result;
   }
 
   init();

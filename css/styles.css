@@ -957,6 +957,17 @@ textarea:focus {
   line-height: 1.4;
 }
 
+.form-note-alert {
+  font-weight: 600;
+  color: var(--rose-dark);
+}
+
+.form-note-alert:empty {
+  min-height: 0;
+  margin: 0;
+  font-weight: 400;
+}
+
 .empty-state {
   padding: 20px;
   border: 1px dashed rgba(71, 46, 38, 0.22);
