@@ -728,12 +728,11 @@
     const settings = data.settings && typeof data.settings === "object" ? data.settings : {};
     const emailjs = settings.emailjs && typeof settings.emailjs === "object" ? settings.emailjs : {};
     const savedProducts = Array.isArray(data.products) ? data.products : [];
-    const savedProductIds = new Set(savedProducts.map((product) => product.id));
-    const productSource = [
-      ...savedProducts,
-      ...defaults.products.filter((product) => !savedProductIds.has(product.id))
-    ];
-    const products = productSource.map((product, index) => {
+    // Respect exactly what the owner saved — do NOT re-merge the demo
+    // defaults here. That merge resurrected deleted products on every
+    // save/load. Defaults still apply when the stored list is missing
+    // entirely (fresh browser or corrupt data).
+    const products = savedProducts.map((product, index) => {
       const fallbackProduct = defaults.products.find((entry) => entry.id === product.id) || defaults.products[index] || defaults.products[0];
       return {
         ...product,
