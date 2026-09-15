@@ -177,7 +177,11 @@
         data.settings.catalogUpdatedAt = new Date().toISOString();
         dataApi.save(data);
         const result = await dataApi.pushCloudData(data, data.settings.adminPasscode || "owner123");
-        setCloudStatus(result.ok ? "Published to cloud - all devices now see this menu." : "Cloud publish failed: " + (result.error || "unknown"), !result.ok);
+        if (result.ok) {
+          setCloudStatus("Published to cloud - all devices now see this menu.");
+        } else {
+          setCloudStatus(describeSyncError(new Error(result.error || "network")), true);
+        }
         return;
       }
       const cloudAt = body.catalog.settings && body.catalog.settings.catalogUpdatedAt;

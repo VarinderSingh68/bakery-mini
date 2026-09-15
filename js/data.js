@@ -869,18 +869,31 @@
 
   async function pullCloudData() {
     if (typeof fetch !== "function") { return null; }
-    try {
-      const response = await fetch("/api/catalog", { cache: "no-store" });
-      if (!response.ok) { return null; }
-      const body = await response.json();
-      if (!body.catalog) { return null; }
-      const merged = mergeCatalog(loadData(), body.catalog);
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(merged));
-      return merged;
-    } catch (error) {
-      console.warn("Cloud catalog pull skipped.", error);
-      return null;
+    for (let attempt = 1; attempt <= 2; attempt += 1) {
+      try {
+        const response = await fetch("/api/catalog", { cache: "no-store" });
+        if (!response.ok) { return null; }
+        const body = await response.json();
+        if (!body.catalog) { return null; }
+        const merged = mergeCatalog(loadData(), body.catalog);
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(merged));
+        } catch (storageError) {
+          // Phone storage may be too full to cache the catalog. Render it
+          // from memory anyway - the visitor still sees the real menu.
+          console.warn("Cloud catalog could not be cached locally; using it for this visit only.", storageError);
+        }
+        return merged;
+      } catch (error) {
+        if (attempt === 2) {
+          console.warn("Cloud catalog pull skipped.", error);
+          return null;
+        }
+        // Render free tier can sleep; give the server a moment and retry once.
+        await new Promise((resolve) => setTimeout(resolve, 3000));
+      }
     }
+    return null;
   }
 
   async function pushCloudData(dataToPush, passcode) {
