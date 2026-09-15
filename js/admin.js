@@ -3,6 +3,7 @@
 
   const dataApi = window.BakeryData;
   let data = dataApi.load();
+  let cloudPasscode = "";
   let currentProductImage = "";
   let currentSpecialImage = "";
   let currentBannerImage = "";
@@ -125,15 +126,7 @@
     elements.settingsForm.addEventListener("submit", handleSettingsSubmit);
     elements.resetData.addEventListener("click", handleResetData);
     elements.cloudSyncButton.addEventListener("click", async () => {
-      setCloudStatus("Publishing to cloud...");
-      const result = await dataApi.pushCloudData(data, data.settings.adminPasscode || "owner123");
-      if (result.ok) {
-        data.settings.catalogUpdatedAt = new Date().toISOString();
-        dataApi.save(data);
-        setCloudStatus("Published - all devices now see this menu.");
-      } else {
-        setCloudStatus(describeSyncError(new Error(result.error || "network")), true);
-      }
+      await publishCatalog("Published - all devices now see this menu.");
     });
     elements.clearOrders.addEventListener("click", handleClearOrders);
   }
@@ -143,6 +136,7 @@
     const passcode = elements.loginForm.elements.passcode.value;
 
     if (passcode === data.settings.adminPasscode) {
+      cloudPasscode = passcode;
       sessionStorage.setItem("bakery_admin_authenticated", "yes");
       elements.loginForm.reset();
       elements.loginMessage.textContent = "";
@@ -154,6 +148,7 @@
   }
 
   function handleLogout() {
+    cloudPasscode = "";
     sessionStorage.removeItem("bakery_admin_authenticated");
     elements.dashboardView.hidden = true;
     elements.loginView.hidden = false;
@@ -174,18 +169,21 @@
       const body = await response.json();
       if (!body.catalog) {
         // Cloud empty: publish this browser's catalog so other devices get it.
-        data.settings.catalogUpdatedAt = new Date().toISOString();
-        dataApi.save(data);
-        const result = await dataApi.pushCloudData(data, data.settings.adminPasscode || "owner123");
-        if (result.ok) {
-          setCloudStatus("Published to cloud - all devices now see this menu.");
-        } else {
-          setCloudStatus(describeSyncError(new Error(result.error || "network")), true);
-        }
+        await publishCatalog("Published to cloud - all devices now see this menu.");
         return;
       }
       const cloudAt = body.catalog.settings && body.catalog.settings.catalogUpdatedAt;
       const localAt = data.settings && data.settings.catalogUpdatedAt;
+      if (!cloudAt && !localAt) {
+        const merged = await dataApi.pullCloudData();
+        if (merged) {
+          data = merged;
+          refreshAll();
+          populateSettingsForm();
+          setCloudStatus("Updated from cloud catalog.");
+          return;
+        }
+      }
       if (cloudAt && (!localAt || cloudAt > localAt)) {
         // Another device saved newer changes: adopt them here too.
         const merged = await dataApi.pullCloudData();
@@ -196,6 +194,10 @@
           setCloudStatus("Updated from cloud (newer edits found).");
           return;
         }
+      }
+      if (localAt && (!cloudAt || localAt > cloudAt)) {
+        await publishCatalog("Published local changes to cloud.");
+        return;
       }
       setCloudStatus("Cloud is up to date with this browser.");
     } catch (error) {
@@ -210,6 +212,9 @@
     }
     if (text.includes("503")) {
       return "Server database is not connected - add the DATABASE_URL environment variable on Render, then redeploy.";
+    }
+    if (text.includes("413")) {
+      return "Catalog is too large to publish. Use image links for big photos, or reduce uploaded image count/size.";
     }
     if (text.includes("401")) {
       return "Sync rejected: admin passcode does not match the server (ADMIN_PASSCODE).";
@@ -870,6 +875,7 @@
       resetSpecialForm();
       refreshAll();
       elements.settingsMessage.textContent = "Demo data restored.";
+      publishCatalog("Demo data restored and published to cloud.");
     }
   }
 
@@ -1047,28 +1053,57 @@
     } else if (result.warning) {
       alert(result.warning);
     }
-    syncToCloud();
+    if (result.ok) {
+      publishCatalog();
+    }
     return result;
   }
 
-  let cloudSyncTimer = 0;
-  function syncToCloud() {
-    clearTimeout(cloudSyncTimer);
-    cloudSyncTimer = setTimeout(async () => {
-      try {
-        data.settings.catalogUpdatedAt = new Date().toISOString();
-        dataApi.save(data);
-        const passcode = data.settings.adminPasscode || "owner123";
-        const result = await dataApi.pushCloudData(data, passcode);
-        if (result && result.ok) {
-          console.info("Catalog synced to cloud.");
-        } else if (result && result.error) {
-          console.warn("Catalog cloud sync failed:", result.error);
-        }
-      } catch (error) {
-        // offline or server down - local save already succeeded
+  let catalogPublishSeq = 0;
+  function getCloudPasscode() {
+    return cloudPasscode || data.settings.adminPasscode || "owner123";
+  }
+
+  async function publishCatalog(successMessage) {
+    const publishSeq = ++catalogPublishSeq;
+    elements.cloudSyncButton.disabled = true;
+    setCloudStatus("Publishing changes to cloud...");
+
+    try {
+      data.settings.catalogUpdatedAt = new Date().toISOString();
+      const localResult = dataApi.save(data);
+      if (!localResult.ok) {
+        setCloudStatus(localResult.error, true);
+        return { ok: false, error: localResult.error };
       }
-    }, 600);
+
+      const catalog = dataApi.load();
+      const result = await dataApi.pushCloudData(catalog, getCloudPasscode());
+      if (publishSeq !== catalogPublishSeq) {
+        return result;
+      }
+
+      if (result && result.ok) {
+        if (result.catalog) {
+          dataApi.save(result.catalog);
+          data = dataApi.load();
+        }
+        setCloudStatus(successMessage || "Published - all devices now see this menu.");
+        return result;
+      }
+
+      setCloudStatus(describeSyncError(new Error(result?.error || "network")), true);
+      return result || { ok: false, error: "network" };
+    } catch (error) {
+      if (publishSeq === catalogPublishSeq) {
+        setCloudStatus(describeSyncError(error), true);
+      }
+      return { ok: false, error: String(error?.message || error || "Cloud sync failed") };
+    } finally {
+      if (publishSeq === catalogPublishSeq) {
+        elements.cloudSyncButton.disabled = false;
+      }
+    }
   }
 
   init();

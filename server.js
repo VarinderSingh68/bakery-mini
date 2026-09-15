@@ -9,11 +9,12 @@ const { Pool } = pg;
 const app = express();
 const port = Number(process.env.PORT || 10000);
 const rootDir = path.dirname(fileURLToPath(import.meta.url));
+const catalogFilePath = path.join(rootDir, ".data", "catalog.json");
 const pool = process.env.DATABASE_URL
   ? new Pool({ connectionString: process.env.DATABASE_URL, ssl: { rejectUnauthorized: false } })
   : null;
 
-app.use(express.json({ limit: "15mb" }));
+app.use(express.json({ limit: process.env.JSON_BODY_LIMIT || "25mb" }));
 app.use(express.static(rootDir, {
   setHeaders: (res, filePath) => {
     if (filePath.endsWith(".html")) {
@@ -163,17 +164,61 @@ async function deliverOrderOnWhatsApp(order, pdf) {
   ]);
 }
 
-function catalogPasscodeValid(request) {
-  return request.get("x-admin-passcode") === (process.env.ADMIN_PASSCODE || "owner123");
+function catalogStoreName() {
+  return pool ? "database" : "file";
+}
+
+async function readFileCatalog() {
+  try {
+    return JSON.parse(await fs.readFile(catalogFilePath, "utf8"));
+  } catch (error) {
+    if (error.code === "ENOENT") {
+      return null;
+    }
+    throw error;
+  }
+}
+
+async function writeFileCatalog(catalog) {
+  await fs.mkdir(path.dirname(catalogFilePath), { recursive: true });
+  await fs.writeFile(catalogFilePath, JSON.stringify(catalog), "utf8");
+}
+
+async function readCatalog() {
+  if (!pool) {
+    return readFileCatalog();
+  }
+  const result = await pool.query("SELECT value FROM app_state WHERE key = 'catalog'");
+  return result.rows[0]?.value ?? null;
+}
+
+async function writeCatalog(catalog) {
+  if (!pool) {
+    await writeFileCatalog(catalog);
+    return;
+  }
+  await pool.query(
+    `INSERT INTO app_state (key, value, updated_at) VALUES ('catalog', $1, NOW())
+     ON CONFLICT (key) DO UPDATE SET value = $1, updated_at = NOW()`,
+    [JSON.stringify(catalog)]
+  );
+}
+
+async function catalogPasscodeValid(request) {
+  const passcode = request.get("x-admin-passcode");
+  if (!passcode) {
+    return false;
+  }
+  if (passcode === (process.env.ADMIN_PASSCODE || "owner123")) {
+    return true;
+  }
+  const catalog = await readCatalog().catch(() => null);
+  return passcode === catalog?.settings?.adminPasscode;
 }
 
 app.get("/api/catalog", async (_request, response) => {
-  if (!pool) {
-    return response.json({ catalog: null });
-  }
   try {
-    const result = await pool.query("SELECT value FROM app_state WHERE key = 'catalog'");
-    response.json({ catalog: result.rows[0]?.value ?? null });
+    response.json({ catalog: await readCatalog(), store: catalogStoreName() });
   } catch (error) {
     console.error("Catalog lookup failed", error);
     response.status(500).json({ error: "Catalog could not be loaded." });
@@ -181,10 +226,7 @@ app.get("/api/catalog", async (_request, response) => {
 });
 
 app.put("/api/catalog", async (request, response) => {
-  if (!pool) {
-    return response.status(503).json({ error: "Database not configured on this server (DATABASE_URL missing)." });
-  }
-  if (!catalogPasscodeValid(request)) {
+  if (!(await catalogPasscodeValid(request))) {
     return response.status(401).json({ error: "Unauthorized" });
   }
   const catalog = request.body;
@@ -192,12 +234,15 @@ app.put("/api/catalog", async (request, response) => {
     return response.status(400).json({ error: "Invalid catalog payload." });
   }
   try {
-    await pool.query(
-      `INSERT INTO app_state (key, value, updated_at) VALUES ('catalog', $1, NOW())
-       ON CONFLICT (key) DO UPDATE SET value = $1, updated_at = NOW()`,
-      [JSON.stringify(catalog)]
-    );
-    response.json({ saved: true });
+    const savedCatalog = {
+      ...catalog,
+      settings: {
+        ...(catalog.settings || {}),
+        catalogUpdatedAt: catalog.settings?.catalogUpdatedAt || new Date().toISOString()
+      }
+    };
+    await writeCatalog(savedCatalog);
+    response.json({ saved: true, catalog: savedCatalog, store: catalogStoreName() });
   } catch (error) {
     console.error("Catalog save failed", error);
     response.status(500).json({ error: "Catalog could not be saved." });
@@ -205,7 +250,7 @@ app.put("/api/catalog", async (request, response) => {
 });
 
 app.get("/api/health", async (_request, response) => {
-  response.json({ ok: true, databaseConfigured: Boolean(pool) });
+  response.json({ ok: true, databaseConfigured: Boolean(pool), catalogStore: catalogStoreName() });
 });
 
 app.get("/api/orders", async (request, response) => {

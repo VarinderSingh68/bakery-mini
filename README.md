@@ -5,13 +5,19 @@ Simple bakery website built with plain HTML, CSS, and JavaScript.
 ## Run locally
 
 ```powershell
-python -m http.server 8080 --bind 127.0.0.1
+npm install
+npm start
 ```
 
 Open:
 
-- Storefront: `http://127.0.0.1:8080/`
-- Admin dashboard: `http://127.0.0.1:8080/admin/`
+- Storefront: `http://127.0.0.1:10000/`
+- Admin dashboard: `http://127.0.0.1:10000/admin`
+
+Use the Node server when you want admin product changes to appear on other
+devices. It saves the shared catalog through `/api/catalog`; with
+`DATABASE_URL` it uses Postgres, and without `DATABASE_URL` it falls back to a
+local `.data/catalog.json` file for the running server.
 
 ## Publish on GitHub Pages
 
@@ -108,9 +114,10 @@ service instead.
 
 ## Static-site note
 
-Admin changes are saved in browser `localStorage`. That is perfect for a simple
-local/static demo. For a real hosted shop where edits must update for every
-customer on every device, connect this frontend to a small backend or database.
+If the files are hosted as a purely static site, admin edits can only be saved
+in that browser. For product images, details, banners, and specials to update on
+every device, host the Node server from this project (for example on Render)
+and open the admin panel from that same hosted website address.
 
 ## Special day items
 

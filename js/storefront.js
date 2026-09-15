@@ -9,6 +9,7 @@
   let selectedSpecialVariantIndex = 0;
   let activeBannerIndex = 0;
   let bannerTimer;
+  let catalogRefreshTimer;
   let productSearchTerm = "";
 
   const elements = {
@@ -57,6 +58,7 @@
     renderCart();
     renderAddOns();
     bindEvents();
+    startCatalogRefresh();
   }
 
   function activeProducts() {
@@ -77,10 +79,22 @@
         renderSpecials();
         renderProducts();
         renderAddOns();
+        closeSpecialPreview();
       }
     } catch (error) {
       // offline or static hosting - local catalog already rendered
     }
+  }
+
+  function startCatalogRefresh() {
+    window.clearInterval(catalogRefreshTimer);
+    catalogRefreshTimer = window.setInterval(pullCloudThenRender, 60000);
+    window.addEventListener("focus", pullCloudThenRender);
+    document.addEventListener("visibilitychange", () => {
+      if (!document.hidden) {
+        pullCloudThenRender();
+      }
+    });
   }
 
   function renderBrand() {

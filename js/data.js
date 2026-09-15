@@ -906,9 +906,10 @@
       });
       const body = await response.json().catch(() => ({}));
       if (!response.ok) { return { ok: false, error: (body.error ? body.error + " " : "") + "(" + response.status + ")" }; }
-      return { ok: true };
+      return { ok: true, catalog: body.catalog || dataToPush, store: body.store || "server" };
     } catch (error) {
-      return { ok: false, error: "Cloud sync unreachable" };
+      const detail = error && error.message ? ": " + error.message : "";
+      return { ok: false, error: "Cloud sync unreachable" + detail };
     }
   }
 
