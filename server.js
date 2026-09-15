@@ -157,6 +157,44 @@ async function deliverOrderOnWhatsApp(order, pdf) {
   ]);
 }
 
+function catalogPasscodeValid(request) {
+  return request.get("x-admin-passcode") === (process.env.ADMIN_PASSCODE || "owner123");
+}
+
+app.get("/api/catalog", async (_request, response) => {
+  if (!pool) {
+    return response.json({ catalog: null });
+  }
+  try {
+    const result = await pool.query("SELECT value FROM app_state WHERE key = 'catalog'");
+    response.json({ catalog: result.rows[0]?.value ?? null });
+  } catch (error) {
+    console.error("Catalog lookup failed", error);
+    response.status(500).json({ error: "Catalog could not be loaded." });
+  }
+});
+
+app.put("/api/catalog", async (request, response) => {
+  if (!pool || !catalogPasscodeValid(request)) {
+    return response.status(401).json({ error: "Unauthorized" });
+  }
+  const catalog = request.body;
+  if (!catalog || !Array.isArray(catalog.products)) {
+    return response.status(400).json({ error: "Invalid catalog payload." });
+  }
+  try {
+    await pool.query(
+      `INSERT INTO app_state (key, value, updated_at) VALUES ('catalog', $1, NOW())
+       ON CONFLICT (key) DO UPDATE SET value = $1, updated_at = NOW()`,
+      [JSON.stringify(catalog)]
+    );
+    response.json({ saved: true });
+  } catch (error) {
+    console.error("Catalog save failed", error);
+    response.status(500).json({ error: "Catalog could not be saved." });
+  }
+});
+
 app.get("/api/health", async (_request, response) => {
   response.json({ ok: true, databaseConfigured: Boolean(pool) });
 });

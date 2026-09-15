@@ -861,6 +861,44 @@
     }
   }
 
+  function mergeCatalog(local, cloud) {
+    // Cloud catalog wins entirely - the admin panel is the source of truth.
+    const merged = { ...local, ...cloud };
+    return normalizeData(merged);
+  }
+
+  async function pullCloudData() {
+    if (typeof fetch !== "function") { return null; }
+    try {
+      const response = await fetch("/api/catalog", { cache: "no-store" });
+      if (!response.ok) { return null; }
+      const body = await response.json();
+      if (!body.catalog) { return null; }
+      const merged = mergeCatalog(loadData(), body.catalog);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(merged));
+      return merged;
+    } catch (error) {
+      console.warn("Cloud catalog pull skipped.", error);
+      return null;
+    }
+  }
+
+  async function pushCloudData(dataToPush, passcode) {
+    if (typeof fetch !== "function") { return { ok: false, error: "fetch unavailable" }; }
+    try {
+      const response = await fetch("/api/catalog", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json", "x-admin-passcode": String(passcode || "") },
+        body: JSON.stringify(dataToPush)
+      });
+      const body = await response.json().catch(() => ({}));
+      if (!response.ok) { return { ok: false, error: body.error || "Cloud sync failed (" + response.status + ")" }; }
+      return { ok: true };
+    } catch (error) {
+      return { ok: false, error: "Cloud sync unreachable" };
+    }
+  }
+
   function resetData() {
     const defaults = getDefaultData();
     saveData(defaults);
@@ -1090,6 +1128,8 @@
     load: loadData,
     save: saveData,
     reset: resetData,
+    pullCloudData,
+    pushCloudData,
     createId,
     createOrderId,
     formatPrice,

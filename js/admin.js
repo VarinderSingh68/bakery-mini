@@ -976,7 +976,26 @@
     } else if (result.warning) {
       alert(result.warning);
     }
+    syncToCloud();
     return result;
+  }
+
+  let cloudSyncTimer = 0;
+  function syncToCloud() {
+    clearTimeout(cloudSyncTimer);
+    cloudSyncTimer = setTimeout(async () => {
+      try {
+        const passcode = data.settings.adminPasscode || "owner123";
+        const result = await dataApi.pushCloudData(data, passcode);
+        if (result && result.ok) {
+          console.info("Catalog synced to cloud.");
+        } else if (result && result.error) {
+          console.warn("Catalog cloud sync failed:", result.error);
+        }
+      } catch (error) {
+        // offline or server down - local save already succeeded
+      }
+    }, 600);
   }
 
   init();

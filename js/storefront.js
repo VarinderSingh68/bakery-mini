@@ -49,6 +49,7 @@
   };
 
   function init() {
+    pullCloudThenRender();
     renderBrand();
     renderHero();
     renderSpecials();
@@ -60,6 +61,26 @@
 
   function activeProducts() {
     return data.products.filter((product) => product.active !== false);
+  }
+
+  async function pullCloudThenRender() {
+    // Pull the shared catalog from the server (if any device saved one) and
+    // re-render so every phone shows the same menu as the admin panel.
+    try {
+      const cloud = await dataApi.pullCloudData();
+      if (cloud) {
+        data = cloud;
+        cart = dataApi.getCart();
+        activeBannerIndex = 0;
+        renderBrand();
+        renderHero();
+        renderSpecials();
+        renderProducts();
+        renderAddOns();
+      }
+    } catch (error) {
+      // offline or static hosting - local catalog already rendered
+    }
   }
 
   function renderBrand() {

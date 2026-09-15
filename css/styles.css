@@ -1687,6 +1687,25 @@ body[data-page="admin"] {
   .settings-form .danger-button {
     width: 100%;
   }
+
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .variant-row {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+
+  .variant-row button[data-variant-remove] {
+    grid-column: 1 / -1;
+    width: 100%;
+  }
+
+  input,
+  select,
+  textarea {
+    font-size: 16px;
+  }
 }
 
 @media (max-width: 380px) {
