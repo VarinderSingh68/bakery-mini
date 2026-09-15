@@ -16,10 +16,10 @@ const pool = process.env.DATABASE_URL
 
 app.use(express.json({ limit: process.env.JSON_BODY_LIMIT || "25mb" }));
 app.use(express.static(rootDir, {
-  setHeaders: (res, filePath) => {
-    if (filePath.endsWith(".html")) {
-      res.setHeader("Cache-Control", "no-cache");
-    }
+  // Serve everything fresh: a phone holding last week's storefront.js would
+  // never call /api/catalog, so it would keep showing the demo catalog.
+  setHeaders: (res) => {
+    res.setHeader("Cache-Control", "no-cache");
   }
 }));
 

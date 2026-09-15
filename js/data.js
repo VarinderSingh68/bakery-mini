@@ -869,9 +869,19 @@
 
   async function pullCloudData() {
     if (typeof fetch !== "function") { return null; }
-    for (let attempt = 1; attempt <= 2; attempt += 1) {
+    const attemptOnce = async () => {
+      // Abort a hanging request (Render free tier cold start) instead of
+      // waiting forever with the demo catalog on screen.
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 12000);
       try {
-        const response = await fetch("/api/catalog", { cache: "no-store" });
+        const response = await fetch("/api/catalog", { cache: "no-store", signal: controller.signal });
+        if (response.status >= 500) {
+          // Server waking up / database hiccup: retryable, not a "no cloud".
+          const retryError = new Error("status " + response.status);
+          retryError.retryable = true;
+          throw retryError;
+        }
         if (!response.ok) { return null; }
         const body = await response.json();
         if (!body.catalog) { return null; }
@@ -884,13 +894,22 @@
           console.warn("Cloud catalog could not be cached locally; using it for this visit only.", storageError);
         }
         return merged;
+      } finally {
+        clearTimeout(timeout);
+      }
+    };
+    for (let attempt = 1; attempt <= 3; attempt += 1) {
+      try {
+        return await attemptOnce();
       } catch (error) {
-        if (attempt === 2) {
+        const retryable = error && (error.retryable || error.name === "AbortError");
+        if (attempt === 3 || !retryable) {
           console.warn("Cloud catalog pull skipped.", error);
           return null;
         }
-        // Render free tier can sleep; give the server a moment and retry once.
-        await new Promise((resolve) => setTimeout(resolve, 3000));
+        // Render free tier sleeps; wait and retry so first visitors after an
+        // idle period still get the real menu.
+        await new Promise((resolve) => setTimeout(resolve, 2500));
       }
     }
     return null;

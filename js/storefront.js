@@ -131,7 +131,12 @@
     activeBannerIndex = (index + banners.length) % banners.length;
     const banner = banners[activeBannerIndex];
     elements.heroEyebrow.textContent = banner.eyebrow;
-    elements.heroTitle.textContent = banner.title;
+    // Render the last word of the title as an italic gold accent — the small
+    // typographic flourish that makes the hero feel like a luxury brand.
+    const titleWords = String(banner.title || "").split(/\s+/);
+    const accent = titleWords.length > 1 ? titleWords.pop() : "";
+    elements.heroTitle.innerHTML =
+      dataApi.escapeHtml(titleWords.join(" ")) + (accent ? " <em>" + dataApi.escapeHtml(accent) + "</em>" : "");
     elements.heroDescription.textContent = banner.description;
     elements.heroCta.textContent = banner.buttonLabel;
     elements.heroCta.href = "#cakes";
@@ -557,9 +562,16 @@
   function renderCart() {
     const count = cart.reduce((sum, item) => sum + item.qty, 0);
     const total = cartTotal();
+    const previousCount = elements.cartCount.textContent;
     elements.cartCount.textContent = String(count);
     elements.cartTotal.textContent = dataApi.formatPrice(total);
     elements.placeOrder.disabled = cart.length === 0;
+
+    if (previousCount !== String(count)) {
+      elements.cartCount.classList.remove("pop");
+      void elements.cartCount.offsetWidth;
+      elements.cartCount.classList.add("pop");
+    }
 
     if (!cart.length) {
       elements.cartItems.innerHTML = `

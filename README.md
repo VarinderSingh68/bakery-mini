@@ -19,6 +19,17 @@ devices. It saves the shared catalog through `/api/catalog`; with
 `DATABASE_URL` it uses Postgres, and without `DATABASE_URL` it falls back to a
 local `.data/catalog.json` file for the running server.
 
+After deployment, open `/api/health` on the hosted domain. A correct cross-device
+deployment returns JSON like:
+
+```json
+{"ok":true,"databaseConfigured":true,"catalogStore":"database"}
+```
+
+If `/api/health` returns `404 Not Found`, the site is deployed as a static site.
+Static deployments cannot make admin edits permanent for every device because
+the browser cannot write product changes back to the hosted site.
+
 ## Publish on GitHub Pages
 
 This is a static HTML/CSS/JavaScript site and can be hosted directly from a

@@ -167,6 +167,10 @@
       const response = await fetch("/api/catalog", { cache: "no-store" });
       if (!response.ok) { throw new Error("status " + response.status); }
       const body = await response.json();
+      if (body.store === "file") {
+        setCloudStatus("WARNING: no database is connected - your menu is stored on a temporary disk that Render WIPES on every restart. That is why changes showed once and then vanished for other devices. Fix: in the Render dashboard create a Postgres database and connect it so DATABASE_URL exists, then redeploy, open this admin panel and click Sync to cloud now.", true);
+        return;
+      }
       if (!body.catalog) {
         // Cloud empty: publish this browser's catalog so other devices get it.
         await publishCatalog("Published to cloud - all devices now see this menu.");
@@ -208,7 +212,7 @@
   function describeSyncError(error) {
     const text = String((error && error.message) || error || "");
     if (text.includes("404")) {
-      return "This server does not have catalog sync yet - deploy the latest code to Render, then refresh this page.";
+      return "This server does not have catalog sync yet - it is still running the old code. Wait for the Render deploy to finish, then hard-refresh this page (Ctrl+F5).";
     }
     if (text.includes("503")) {
       return "Server database is not connected - add the DATABASE_URL environment variable on Render, then redeploy.";
