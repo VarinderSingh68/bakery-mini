@@ -61,6 +61,7 @@
 
   function init() {
     bindEvents();
+    migrateStoredImages();
     resetProductForm();
     resetSpecialForm();
     resetBannerForm();
@@ -798,6 +799,67 @@
     }
   }
 
+  function drawScaledCanvas(sourceWidth, sourceHeight, draw) {
+    // Phone photos are 2-5 MB, but browser storage only holds ~5 MB TOTAL.
+    // Downscale to 1200px and re-encode as JPEG so uploads always fit.
+    const maxSide = 1200;
+    const scale = Math.min(1, maxSide / Math.max(sourceWidth, sourceHeight));
+    const width = Math.max(1, Math.round(sourceWidth * scale));
+    const height = Math.max(1, Math.round(sourceHeight * scale));
+    const canvas = document.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
+    const context = canvas.getContext("2d");
+    if (!context) {
+      return null;
+    }
+    context.fillStyle = "#ffffff";
+    context.fillRect(0, 0, width, height);
+    draw(context, width, height);
+    return canvas.toDataURL("image/jpeg", 0.82);
+  }
+
+  function compressImageFile(file, dataUrl) {
+    // createImageBitmap is missing/throws on some browsers (older iOS Safari),
+    // so fall back to a plain <img> decode. Either way, oversized raw data
+    // URLs must never be stored.
+    return new Promise((resolve) => {
+      const finish = (value) => resolve(typeof value === "string" && value.startsWith("data:") ? value : dataUrl);
+
+      const tryBitmap = typeof window.createImageBitmap === "function"
+        ? window.createImageBitmap(file)
+            .then((bitmap) => {
+              const result = drawScaledCanvas(bitmap.width, bitmap.height, (context, width, height) => context.drawImage(bitmap, 0, 0, width, height));
+              bitmap.close?.();
+              return result;
+            })
+        : Promise.reject(new Error("createImageBitmap unavailable"));
+
+      const tryImageElement = () => new Promise((imgResolve, imgReject) => {
+        const url = URL.createObjectURL(file);
+        const image = new Image();
+        image.onload = () => {
+          URL.revokeObjectURL(url);
+          try {
+            imgResolve(drawScaledCanvas(image.naturalWidth, image.naturalHeight, (context, width, height) => context.drawImage(image, 0, 0, width, height)));
+          } catch (error) {
+            imgReject(error);
+          }
+        };
+        image.onerror = () => {
+          URL.revokeObjectURL(url);
+          imgReject(new Error("image decode failed"));
+        };
+        image.src = url;
+      });
+
+      tryBitmap
+        .catch(() => tryImageElement())
+        .then((result) => finish(result))
+        .catch(() => finish(dataUrl));
+    });
+  }
+
   function readImage(file, onLoad) {
     if (!file) {
       return;
@@ -811,42 +873,69 @@
     const reader = new FileReader();
     reader.addEventListener("load", () => {
       const dataUrl = String(reader.result || "");
-      if (typeof window.createImageBitmap !== "function") {
-        onLoad(dataUrl);
-        return;
-      }
-
-      // Phone photos are 2-5 MB, but browser storage only holds ~5 MB TOTAL.
-      // Downscale to 1200px and re-encode as JPEG so uploads always fit.
-      window.createImageBitmap(file)
-        .then((bitmap) => {
-          const maxSide = 1200;
-          const scale = Math.min(1, maxSide / Math.max(bitmap.width, bitmap.height));
-          const width = Math.max(1, Math.round(bitmap.width * scale));
-          const height = Math.max(1, Math.round(bitmap.height * scale));
-          const canvas = document.createElement("canvas");
-          canvas.width = width;
-          canvas.height = height;
-          const context = canvas.getContext("2d");
-          if (!context) {
-            bitmap.close?.();
-            onLoad(dataUrl);
-            return;
-          }
-          context.fillStyle = "#ffffff";
-          context.fillRect(0, 0, width, height);
-          context.drawImage(bitmap, 0, 0, width, height);
-          bitmap.close?.();
-          const compressed = canvas.toDataURL("image/jpeg", 0.82);
-          if (compressed.length < dataUrl.length || dataUrl.length > 400 * 1024) {
-            onLoad(compressed);
-          } else {
-            onLoad(dataUrl);
-          }
-        })
-        .catch(() => onLoad(dataUrl));
+      compressImageFile(file, dataUrl).then((compressed) => {
+        const chosen = compressed.length < dataUrl.length ? compressed : dataUrl;
+        if (chosen.length > 1.5 * 1024 * 1024) {
+          alert("This image is very large and may not save in the browser. If saving fails, use a smaller photo.");
+        }
+        onLoad(chosen);
+      });
     });
     reader.readAsDataURL(file);
+  }
+
+  function recompressStoredImage(dataUrl) {
+    return new Promise((resolve) => {
+      const image = new Image();
+      image.onload = () => {
+        try {
+          const result = drawScaledCanvas(image.naturalWidth, image.naturalHeight, (context, width, height) => context.drawImage(image, 0, 0, width, height));
+          resolve(result && result.length < dataUrl.length ? result : null);
+        } catch (error) {
+          resolve(null);
+        }
+      };
+      image.onerror = () => resolve(null);
+      image.src = dataUrl;
+    });
+  }
+
+  function migrateStoredImages() {
+    // Storage filled up with full-size base64 images before compression was
+    // added. Shrink any stored image over ~400 KB once so saves stop failing.
+    const LIMIT = 400 * 1024;
+    const jobs = [];
+    let changed = 0;
+    [data.products, data.specials, data.banners].forEach((items) => {
+      items.forEach((item) => {
+        const image = item && typeof item.image === "string" ? item.image : "";
+        if (!image.startsWith("data:image/") || image.length <= LIMIT) {
+          return;
+        }
+        jobs.push(
+          recompressStoredImage(image).then((compressed) => {
+            if (compressed) {
+              item.image = compressed;
+              changed += 1;
+            }
+          })
+        );
+      });
+    });
+    if (!jobs.length) {
+      return;
+    }
+    console.info(`Bakery admin: shrinking ${jobs.length} oversized stored image(s)...`);
+    Promise.all(jobs).then(() => {
+      if (!changed) {
+        return;
+      }
+      const result = dataApi.save(data);
+      if (result.ok) {
+        console.info(`Bakery admin: ${changed} image(s) recompressed to free storage space.`);
+        refreshAll();
+      }
+    });
   }
 
   function saveAndRefresh() {
