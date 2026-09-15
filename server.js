@@ -181,7 +181,10 @@ app.get("/api/catalog", async (_request, response) => {
 });
 
 app.put("/api/catalog", async (request, response) => {
-  if (!pool || !catalogPasscodeValid(request)) {
+  if (!pool) {
+    return response.status(503).json({ error: "Database not configured on this server (DATABASE_URL missing)." });
+  }
+  if (!catalogPasscodeValid(request)) {
     return response.status(401).json({ error: "Unauthorized" });
   }
   const catalog = request.body;

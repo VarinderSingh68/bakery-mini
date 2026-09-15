@@ -892,7 +892,7 @@
         body: JSON.stringify(dataToPush)
       });
       const body = await response.json().catch(() => ({}));
-      if (!response.ok) { return { ok: false, error: body.error || "Cloud sync failed (" + response.status + ")" }; }
+      if (!response.ok) { return { ok: false, error: (body.error ? body.error + " " : "") + "(" + response.status + ")" }; }
       return { ok: true };
     } catch (error) {
       return { ok: false, error: "Cloud sync unreachable" };

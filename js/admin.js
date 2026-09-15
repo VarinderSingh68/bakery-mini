@@ -127,7 +127,13 @@
     elements.cloudSyncButton.addEventListener("click", async () => {
       setCloudStatus("Publishing to cloud...");
       const result = await dataApi.pushCloudData(data, data.settings.adminPasscode || "owner123");
-      setCloudStatus(result.ok ? "Published - all devices now see this menu." : "Publish failed: " + (result.error || "unknown"), !result.ok);
+      if (result.ok) {
+        data.settings.catalogUpdatedAt = new Date().toISOString();
+        dataApi.save(data);
+        setCloudStatus("Published - all devices now see this menu.");
+      } else {
+        setCloudStatus(describeSyncError(new Error(result.error || "network")), true);
+      }
     });
     elements.clearOrders.addEventListener("click", handleClearOrders);
   }
@@ -189,8 +195,22 @@
       }
       setCloudStatus("Cloud is up to date with this browser.");
     } catch (error) {
-      setCloudStatus("Cloud check skipped (server unreachable or database not set).", true);
+      setCloudStatus(describeSyncError(error), true);
     }
+  }
+
+  function describeSyncError(error) {
+    const text = String((error && error.message) || error || "");
+    if (text.includes("404")) {
+      return "This server does not have catalog sync yet - deploy the latest code to Render, then refresh this page.";
+    }
+    if (text.includes("503")) {
+      return "Server database is not connected - add the DATABASE_URL environment variable on Render, then redeploy.";
+    }
+    if (text.includes("401")) {
+      return "Sync rejected: admin passcode does not match the server (ADMIN_PASSCODE).";
+    }
+    return "Cannot reach the server. Open this admin panel at your Render website address (https://...onrender.com/admin), not a local preview, then try again.";
   }
 
   function setCloudStatus(message, isError) {
