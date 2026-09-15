@@ -53,6 +53,8 @@
     orderList: document.getElementById("orderList"),
     clearOrders: document.getElementById("clearOrders"),
     resetData: document.getElementById("resetData"),
+    cloudSyncStatus: document.getElementById("cloudSyncStatus"),
+    cloudSyncButton: document.getElementById("cloudSyncButton"),
     statProducts: document.getElementById("statProducts"),
     statCategories: document.getElementById("statCategories"),
     statSpecials: document.getElementById("statSpecials"),
@@ -122,6 +124,11 @@
 
     elements.settingsForm.addEventListener("submit", handleSettingsSubmit);
     elements.resetData.addEventListener("click", handleResetData);
+    elements.cloudSyncButton.addEventListener("click", async () => {
+      setCloudStatus("Publishing to cloud...");
+      const result = await dataApi.pushCloudData(data, data.settings.adminPasscode || "owner123");
+      setCloudStatus(result.ok ? "Published - all devices now see this menu." : "Publish failed: " + (result.error || "unknown"), !result.ok);
+    });
     elements.clearOrders.addEventListener("click", handleClearOrders);
   }
 
@@ -150,6 +157,46 @@
     elements.loginView.hidden = true;
     elements.dashboardView.hidden = false;
     refreshAll();
+    syncOnOpen();
+  }
+
+  async function syncOnOpen() {
+    setCloudStatus("Checking cloud catalog...");
+    try {
+      const response = await fetch("/api/catalog", { cache: "no-store" });
+      if (!response.ok) { throw new Error("status " + response.status); }
+      const body = await response.json();
+      if (!body.catalog) {
+        // Cloud empty: publish this browser's catalog so other devices get it.
+        data.settings.catalogUpdatedAt = new Date().toISOString();
+        dataApi.save(data);
+        const result = await dataApi.pushCloudData(data, data.settings.adminPasscode || "owner123");
+        setCloudStatus(result.ok ? "Published to cloud - all devices now see this menu." : "Cloud publish failed: " + (result.error || "unknown"), !result.ok);
+        return;
+      }
+      const cloudAt = body.catalog.settings && body.catalog.settings.catalogUpdatedAt;
+      const localAt = data.settings && data.settings.catalogUpdatedAt;
+      if (cloudAt && (!localAt || cloudAt > localAt)) {
+        // Another device saved newer changes: adopt them here too.
+        const merged = await dataApi.pullCloudData();
+        if (merged) {
+          data = merged;
+          refreshAll();
+          populateSettingsForm();
+          setCloudStatus("Updated from cloud (newer edits found).");
+          return;
+        }
+      }
+      setCloudStatus("Cloud is up to date with this browser.");
+    } catch (error) {
+      setCloudStatus("Cloud check skipped (server unreachable or database not set).", true);
+    }
+  }
+
+  function setCloudStatus(message, isError) {
+    if (!elements.cloudSyncStatus) { return; }
+    elements.cloudSyncStatus.textContent = message || "";
+    elements.cloudSyncStatus.classList.toggle("error", Boolean(isError));
   }
 
   function setFormMessage(element, message) {
@@ -985,6 +1032,8 @@
     clearTimeout(cloudSyncTimer);
     cloudSyncTimer = setTimeout(async () => {
       try {
+        data.settings.catalogUpdatedAt = new Date().toISOString();
+        dataApi.save(data);
         const passcode = data.settings.adminPasscode || "owner123";
         const result = await dataApi.pushCloudData(data, passcode);
         if (result && result.ok) {

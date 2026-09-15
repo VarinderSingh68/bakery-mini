@@ -1735,3 +1735,16 @@ body[data-page="admin"] {
     gap: 10px;
   }
 }
+
+.cloud-sync-status {
+  font-size: 0.8rem;
+  color: var(--muted);
+  min-height: 1.2em;
+  margin: 6px 0 0;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.cloud-sync-status.error {
+  color: #b3261e;
+}

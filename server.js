@@ -14,7 +14,13 @@ const pool = process.env.DATABASE_URL
   : null;
 
 app.use(express.json({ limit: "1mb" }));
-app.use(express.static(rootDir));
+app.use(express.static(rootDir, {
+  setHeaders: (res, filePath) => {
+    if (filePath.endsWith(".html")) {
+      res.setHeader("Cache-Control", "no-cache");
+    }
+  }
+}));
 
 function requiredEnv(name) {
   const value = process.env[name];
@@ -235,8 +241,14 @@ app.post("/api/orders", async (request, response) => {
   }
 });
 
-app.get("/admin", (_request, response) => response.sendFile(path.join(rootDir, "admin", "index.html")));
-app.get("/{*splat}", (_request, response) => response.sendFile(path.join(rootDir, "index.html")));
+app.get("/admin", (_request, response) => {
+  response.setHeader("Cache-Control", "no-cache");
+  response.sendFile(path.join(rootDir, "admin", "index.html"));
+});
+app.get("/{*splat}", (_request, response) => {
+  response.setHeader("Cache-Control", "no-cache");
+  response.sendFile(path.join(rootDir, "index.html"));
+});
 
 async function start() {
   if (pool) {
