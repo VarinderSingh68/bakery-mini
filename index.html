@@ -14,7 +14,7 @@
       href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=Manrope:wght@400..800&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="css/styles.css?v=20260921c" />
+    <link rel="stylesheet" href="css/styles.css?v=20260921f" />
   </head>
   <body data-page="storefront">
     <header class="site-header">
@@ -85,11 +85,18 @@
             <p class="eyebrow" id="catalogCount">60 cakes available</p>
             <h2>Cakes</h2>
           </div>
+        </div>
+        <div class="catalog-toolbar">
           <label class="catalog-search">
             <span class="sr-only">Search cakes</span>
             <span aria-hidden="true">&#128269;</span>
             <input id="productSearch" type="search" placeholder="Search cakes, flavors, or categories" autocomplete="off" />
           </label>
+          <div class="kg-filter" id="kgFilter" role="group" aria-label="Filter cakes by size">
+            <button class="kg-filter-pill active" type="button" data-kg="all">All sizes</button>
+            <button class="kg-filter-pill" type="button" data-kg="0.5">0.5 kg</button>
+            <button class="kg-filter-pill" type="button" data-kg="1">1 kg</button>
+          </div>
         </div>
         <div class="product-grid" id="productGrid" aria-live="polite"></div>
       </section>
@@ -182,6 +189,6 @@
 
     <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
     <script src="js/data.js?v=20260920-sync1"></script>
-    <script src="js/storefront.js?v=20260921c"></script>
+    <script src="js/storefront.js?v=20260921f"></script>
   </body>
 </html>

@@ -11,6 +11,7 @@
   let bannerTimer;
   let catalogRefreshTimer;
   let productSearchTerm = "";
+  let kgFilterValue = "all";
 
   const elements = {
     productGrid: document.getElementById("productGrid"),
@@ -46,6 +47,7 @@
     placeOrder: document.getElementById("placeOrder"),
     footerContact: document.getElementById("footerContact"),
     productSearch: document.getElementById("productSearch"),
+    kgFilter: document.getElementById("kgFilter"),
     catalogCount: document.getElementById("catalogCount")
   };
 
@@ -202,20 +204,30 @@
       .join("");
   }
 
+  function hasVariantKg(product, kg) {
+    const target = Number(kg);
+    return (product.variants || []).some((variant) => Math.abs(parseFloat(variant.kg) - target) < 0.01);
+  }
+
   function renderProducts() {
     const products = activeProducts();
-    const filteredProducts = productSearchTerm
-      ? products.filter((product) => {
-          const searchableText = [product.name, product.category, product.description, product.details]
-            .filter(Boolean)
-            .join(" ")
-            .toLowerCase();
-          return searchableText.includes(productSearchTerm);
-        })
-      : products;
+    const filteredProducts = products.filter((product) => {
+      if (kgFilterValue !== "all" && !hasVariantKg(product, kgFilterValue)) {
+        return false;
+      }
+      if (!productSearchTerm) {
+        return true;
+      }
+      const searchableText = [product.name, product.category, product.description, product.details]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
+      return searchableText.includes(productSearchTerm);
+    });
 
-    elements.catalogCount.textContent = productSearchTerm
-      ? `${filteredProducts.length} of ${products.length} cakes found`
+    const filterLabel = kgFilterValue === "all" ? "" : ` in ${kgFilterValue} kg`;
+    elements.catalogCount.textContent = productSearchTerm || kgFilterValue !== "all"
+      ? `${filteredProducts.length} of ${products.length} cakes found${filterLabel}`
       : `${products.length} cakes available`;
 
     if (!filteredProducts.length) {
@@ -344,6 +356,17 @@
     elements.addonList.addEventListener("click", handleAddonClick);
     elements.productSearch.addEventListener("input", (event) => {
       productSearchTerm = event.target.value.trim().toLowerCase();
+      renderProducts();
+    });
+    elements.kgFilter.addEventListener("click", (event) => {
+      const pill = event.target.closest("button[data-kg]");
+      if (!pill) {
+        return;
+      }
+      kgFilterValue = pill.dataset.kg;
+      elements.kgFilter.querySelectorAll(".kg-filter-pill").forEach((btn) => {
+        btn.classList.toggle("active", btn === pill);
+      });
       renderProducts();
     });
     elements.heroPrevious.addEventListener("click", () => showBanner(activeBannerIndex - 1));
