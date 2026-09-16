@@ -723,10 +723,21 @@ main {
   gap: 14px;
   width: 100%;
   margin: 0;
-  padding: 16px 20px;
+  padding: 14px 18px;
   border: 0;
   background: transparent;
   text-align: left;
+}
+
+.category-thumb {
+  flex: 0 0 auto;
+  width: 44px;
+  height: 44px;
+  object-fit: cover;
+  border-radius: 12px;
+  border: 1px solid rgba(193, 154, 75, 0.35);
+  box-shadow: 0 4px 10px -4px rgba(44, 26, 17, 0.35);
+  background: var(--cream);
 }
 
 .category-head h3 {
@@ -1862,6 +1873,16 @@ body[data-page="admin"] {
     width: 100%;
     max-width: none;
     flex: 0 0 auto;
+  }
+
+  .category-thumb {
+    width: 40px;
+    height: 40px;
+  }
+
+  .category-head {
+    padding: 12px 14px;
+    gap: 12px;
   }
 
   .kg-filter {

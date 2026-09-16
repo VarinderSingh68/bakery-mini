@@ -281,9 +281,11 @@
         const cards = section.items
           .map((product) => productCardTemplate(product, staggerIndex++))
           .join("");
+        const thumb = section.items.length ? dataApi.getProductImage(section.items[0]) : "";
         return `
           <section class="category-block ${isOpen ? "open" : ""}" data-category-name="${dataApi.escapeHtml(section.name)}">
             <button class="category-head" type="button" data-category-toggle aria-expanded="${isOpen}" aria-controls="categoryBody${sectionIndex}">
+              <img class="category-thumb" src="${dataApi.escapeHtml(thumb)}" alt="" loading="lazy" />
               <h3>${dataApi.escapeHtml(section.name)}</h3>
               <span class="category-count">${section.items.length} ${section.items.length === 1 ? "cake" : "cakes"}</span>
               <span class="category-chevron" aria-hidden="true">&#9662;</span>
