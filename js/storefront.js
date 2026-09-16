@@ -12,6 +12,8 @@
   let catalogRefreshTimer;
   let productSearchTerm = "";
   let kgFilterValue = "all";
+  let categoriesInitialized = false;
+  const openCategories = new Set();
 
   const elements = {
     productGrid: document.getElementById("productGrid"),
@@ -252,6 +254,15 @@
       return a.name.localeCompare(b.name);
     });
 
+    const searchOrFilter = Boolean(productSearchTerm) || kgFilterValue !== "all";
+
+    if (!categoriesInitialized) {
+      categoriesInitialized = true;
+      if (!searchOrFilter && sections.length) {
+        openCategories.add(sections[0].name.toLowerCase());
+      }
+    }
+
     if (!filteredProducts.length) {
       elements.productGrid.innerHTML = `
         <div class="empty-state catalog-empty">
@@ -264,17 +275,24 @@
 
     let staggerIndex = 0;
     elements.productGrid.innerHTML = sections
-      .map((section) => {
+      .map((section, sectionIndex) => {
+        const key = section.name.toLowerCase();
+        const isOpen = searchOrFilter ? true : openCategories.has(key);
         const cards = section.items
           .map((product) => productCardTemplate(product, staggerIndex++))
           .join("");
         return `
-          <section class="category-block" data-category-name="${dataApi.escapeHtml(section.name)}">
-            <div class="category-head">
+          <section class="category-block ${isOpen ? "open" : ""}" data-category-name="${dataApi.escapeHtml(section.name)}">
+            <button class="category-head" type="button" data-category-toggle aria-expanded="${isOpen}" aria-controls="categoryBody${sectionIndex}">
               <h3>${dataApi.escapeHtml(section.name)}</h3>
               <span class="category-count">${section.items.length} ${section.items.length === 1 ? "cake" : "cakes"}</span>
+              <span class="category-chevron" aria-hidden="true">&#9662;</span>
+            </button>
+            <div class="category-body" id="categoryBody${sectionIndex}">
+              <div class="category-body-inner">
+                <div class="product-grid">${cards}</div>
+              </div>
             </div>
-            <div class="product-grid">${cards}</div>
           </section>
         `;
       })
@@ -379,6 +397,7 @@
 
   function bindEvents() {
     elements.productGrid.addEventListener("click", handleProductClick);
+    elements.productGrid.addEventListener("click", handleCategoryToggle);
     elements.specialTrack.addEventListener("click", handleSpecialTrackClick);
     elements.specialTrack.addEventListener("keydown", handleSpecialTrackKeydown);
     elements.specialPreview.addEventListener("click", handleSpecialPreviewClick);
@@ -426,6 +445,28 @@
         closeSpecialPreview();
       }
     });
+  }
+
+  function handleCategoryToggle(event) {
+    const head = event.target.closest("[data-category-toggle]");
+    if (!head) {
+      return;
+    }
+
+    const block = head.closest(".category-block");
+    if (!block) {
+      return;
+    }
+
+    const key = (block.dataset.categoryName || "").toLowerCase();
+    const willOpen = !block.classList.contains("open");
+    block.classList.toggle("open", willOpen);
+    head.setAttribute("aria-expanded", String(willOpen));
+    if (willOpen) {
+      openCategories.add(key);
+    } else {
+      openCategories.delete(key);
+    }
   }
 
   function handleSpecialTrackClick(event) {

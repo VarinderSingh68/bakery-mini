@@ -693,18 +693,40 @@ main {
   gap: 18px;
 }
 
-/* Category blocks: one Luxe section per cake category, in admin order */
+/* Category dropdown blocks: one collapsible Luxe section per category,
+   in admin order. Body animates open/closed via max-height + opacity. */
+.category-block {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  background: rgba(255, 253, 249, 0.72);
+  box-shadow: 0 14px 34px -24px rgba(44, 26, 17, 0.35);
+  overflow: hidden;
+  transition: border-color 320ms var(--ease-lux), box-shadow 320ms var(--ease-lux);
+}
+
 .category-block + .category-block {
-  margin-top: 40px;
+  margin-top: 16px;
+}
+
+.category-block:hover {
+  border-color: rgba(193, 154, 75, 0.45);
+}
+
+.category-block.open {
+  border-color: rgba(193, 154, 75, 0.55);
+  box-shadow: 0 20px 44px -26px rgba(44, 26, 17, 0.4), 0 6px 18px -10px rgba(163, 124, 49, 0.18);
 }
 
 .category-head {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   gap: 14px;
-  margin: 0 0 16px;
-  padding-bottom: 12px;
-  border-bottom: 1px solid var(--line);
+  width: 100%;
+  margin: 0;
+  padding: 16px 20px;
+  border: 0;
+  background: transparent;
+  text-align: left;
 }
 
 .category-head h3 {
@@ -712,9 +734,10 @@ main {
   font-family: var(--font-display);
   font-weight: 520;
   letter-spacing: -0.01em;
-  font-size: clamp(1.35rem, 2.2vw, 1.8rem);
+  font-size: clamp(1.2rem, 2vw, 1.5rem);
   line-height: 1.1;
   color: var(--ink);
+  flex: 1;
 }
 
 .category-count {
@@ -724,6 +747,36 @@ main {
   text-transform: uppercase;
   color: var(--gold-deep);
   white-space: nowrap;
+}
+
+.category-chevron {
+  flex: 0 0 auto;
+  font-size: 0.85rem;
+  color: var(--gold-deep);
+  transition: transform 360ms var(--ease-lux);
+}
+
+.category-block.open .category-chevron {
+  transform: rotate(180deg);
+}
+
+.category-body {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 420ms var(--ease-lux);
+}
+
+.category-block.open .category-body {
+  grid-template-rows: 1fr;
+}
+
+.category-body-inner {
+  min-height: 0;
+  overflow: hidden;
+}
+
+.category-body .product-grid {
+  padding: 2px 20px 20px;
 }
 
 .product-card {
