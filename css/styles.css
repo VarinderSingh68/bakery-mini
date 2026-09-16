@@ -808,6 +808,41 @@ main {
   font-variant-numeric: tabular-nums;
 }
 
+/* Confetti pop on ADD — 0.5s burst, palette-matched, no libraries */
+.confetti-burst {
+  position: fixed;
+  z-index: 60;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+
+.confetti-burst i {
+  position: absolute;
+  width: 7px;
+  height: 10px;
+  margin: -5px 0 0 -3.5px;
+  border-radius: 2px;
+  opacity: 0;
+  animation: confetti-fly 0.5s var(--ease-lux) forwards;
+}
+
+@keyframes confetti-fly {
+  0% {
+    opacity: 1;
+    transform: translate(0, 0) rotate(0deg) scale(1);
+  }
+
+  70% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0;
+    transform: translate(var(--dx), var(--dy)) rotate(var(--rot)) scale(0.6);
+  }
+}
+
 .luxe-divider {
   display: flex;
   align-items: center;

@@ -277,6 +277,37 @@
     `;
   }
 
+  function popConfetti(originEl) {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      return;
+    }
+
+    const rect = originEl.getBoundingClientRect();
+    const colors = ["#c19a4b", "#d9b672", "#a37c31", "#b3495c", "#3a241a", "#f0dcae"];
+    const burst = document.createElement("div");
+    burst.className = "confetti-burst";
+    burst.setAttribute("aria-hidden", "true");
+    burst.style.left = `${rect.left + rect.width / 2}px`;
+    burst.style.top = `${rect.top + rect.height / 2}px`;
+
+    for (let i = 0; i < 12; i += 1) {
+      const bit = document.createElement("i");
+      const angle = (Math.PI * 2 * i) / 12 + Math.random() * 0.5;
+      const dist = 46 + Math.random() * 34;
+      bit.style.setProperty("--dx", `${Math.round(Math.cos(angle) * dist)}px`);
+      bit.style.setProperty("--dy", `${Math.round(Math.sin(angle) * dist - 26)}px`);
+      bit.style.setProperty("--rot", `${Math.round(Math.random() * 420 - 210)}deg`);
+      bit.style.background = colors[i % colors.length];
+      if (i % 3 === 0) {
+        bit.style.borderRadius = "50%";
+      }
+      burst.appendChild(bit);
+    }
+
+    document.body.appendChild(burst);
+    window.setTimeout(() => burst.remove(), 520);
+  }
+
   function productActionHtml(product, selected) {
     const key = findCartKey(product.id);
     const qty = key ? cart.find((item) => item.key === key)?.qty || 0 : 0;
@@ -463,6 +494,7 @@
     }
 
     if (button.dataset.action === "add") {
+      popConfetti(button);
       addToCart(product);
       return;
     }
