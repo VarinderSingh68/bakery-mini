@@ -809,9 +809,11 @@
   function applyFlavorOrganization(products) {
     // Idempotent filing: a cake whose name names a flavor joins that
     // flavor's category; everything else keeps the owner's category.
-    // Add-on menu items are exempt (Blueberry Tub Cake belongs to Add-ons).
+    // Add-on and savoury menu items are exempt (Blueberry Tub Cake belongs
+    // to Add-ons; Kitkat Brownie stays in Savouries).
     products.forEach((product) => {
-      if (String(product.id || "").startsWith("addonmenu-")) {
+      const id = String(product.id || "");
+      if (id.startsWith("addonmenu-") || id.startsWith("savourymenu-")) {
         return;
       }
       const flavor = flavorCategoryForName(product.name);
@@ -888,6 +890,53 @@
     return added;
   }
 
+  // The owner's printed SAVOURIES menu (WhatsApp image), priced in rupees.
+  // Dry cakes carry three weight variants exactly as printed.
+  const SAVOURY_MENU_ITEMS = [
+    { id: "savourymenu-walnut-brownie", name: "Walnut Brownie", group: "Brownie", description: "Fudgy brownie loaded with walnuts.", variants: [{ kg: "1 pc", price: 100 }] },
+    { id: "savourymenu-kitkat-brownie", name: "Kitkat Brownie", group: "Brownie", description: "Brownie topped with crunchy KitKat.", variants: [{ kg: "1 pc", price: 130 }] },
+    { id: "savourymenu-oreo-brownie", name: "Oreo Brownie", group: "Brownie", description: "Brownie with Oreo cookie chunks.", variants: [{ kg: "1 pc", price: 130 }] },
+    { id: "savourymenu-biscoff-brownie", name: "Biscoff Brownie", group: "Brownie", description: "Brownie swirled with Biscoff spread.", variants: [{ kg: "1 pc", price: 150 }] },
+    { id: "savourymenu-nutella-brownie", name: "Nutella Brownie", group: "Brownie", description: "Brownie filled with rich Nutella.", variants: [{ kg: "1 pc", price: 150 }] },
+    { id: "savourymenu-vanilla-dry-fruit", name: "Vanilla Dry Fruit", group: "Dry Cake", description: "Vanilla dry cake packed with dry fruits.", variants: [{ kg: "280g", price: 250 }, { kg: "450g", price: 450 }, { kg: "700g", price: 700 }] },
+    { id: "savourymenu-vanilla-tuti-fruity", name: "Vanilla Tuti Fruity", group: "Dry Cake", description: "Vanilla dry cake studded with tutti frutti.", variants: [{ kg: "280g", price: 220 }, { kg: "450g", price: 400 }, { kg: "700g", price: 650 }] },
+    { id: "savourymenu-chocolate-walnut", name: "Chocolate Walnut", group: "Dry Cake", description: "Chocolate dry cake with walnut crunch.", variants: [{ kg: "280g", price: 250 }, { kg: "450g", price: 450 }, { kg: "700g", price: 700 }] },
+    { id: "savourymenu-chocolate-dry-fruit", name: "Chocolate Dry Fruit", group: "Dry Cake", description: "Chocolate dry cake loaded with dry fruits.", variants: [{ kg: "280g", price: 250 }, { kg: "450g", price: 450 }, { kg: "700g", price: 700 }] },
+    { id: "savourymenu-chocolate-chocochip", name: "Chocolate ChocoChip", group: "Dry Cake", description: "Chocolate dry cake with choco chips.", variants: [{ kg: "280g", price: 250 }, { kg: "450g", price: 450 }, { kg: "700g", price: 700 }] },
+    { id: "savourymenu-vanilla-muffin", name: "Vanilla Muffin", group: "Muffin", description: "Soft vanilla muffin, fresh from the oven.", variants: [{ kg: "1 pc", price: 35 }] },
+    { id: "savourymenu-chocolate-muffin", name: "Chocolate Muffin", group: "Muffin", description: "Rich chocolate muffin with a moist crumb.", variants: [{ kg: "1 pc", price: 40 }] },
+    { id: "savourymenu-mango-muffin", name: "Mango Muffin", group: "Muffin", description: "Seasonal mango muffin with real pulp.", variants: [{ kg: "1 pc", price: 40 }] },
+    { id: "savourymenu-almond-biscotti", name: "Almond Biscotti", group: "Cookies", description: "Crisp twice-baked almond biscotti.", variants: [{ kg: "250g", price: 350 }] },
+    { id: "savourymenu-atta-gur-cookies", name: "Atta Gur Cookies", group: "Cookies", description: "Wholesome wheat cookies sweetened with jaggery.", variants: [{ kg: "250g", price: 250 }] },
+    { id: "savourymenu-almond-cookies", name: "Almond Cookies", group: "Cookies", description: "Buttery cookies with almond bites.", variants: [{ kg: "250g", price: 250 }] },
+    { id: "savourymenu-flacks-crunch-cookies", name: "Flacks Crunch Cookies", group: "Cookies", description: "Crunchy cornflake cookies with a caramel snap.", variants: [{ kg: "250g", price: 250 }] }
+  ];
+
+  function injectSavouryMenu(products, settings) {
+    if (settings && settings.savouryMenuV1) {
+      return false;
+    }
+    const existing = new Set(products.map((product) => product.id));
+    let added = false;
+    SAVOURY_MENU_ITEMS.forEach((item) => {
+      if (existing.has(item.id)) {
+        return;
+      }
+      products.push({
+        id: item.id,
+        name: item.name,
+        category: "Savouries",
+        description: item.description,
+        details: item.group,
+        image: "",
+        active: true,
+        variants: item.variants
+      });
+      added = true;
+    });
+    return added;
+  }
+
   function stampExpressDelivery(products) {
     // Every category promises 60-minute delivery except Customized Cakes.
     products.forEach((product) => {
@@ -914,6 +963,7 @@
     });
     const migratedCategories = mergeFlavorCategories(data.categories, defaults.categories);
     const addonMenuAdded = injectAddonMenu(products, settings);
+    const savouryMenuAdded = injectSavouryMenu(products, settings);
     applyFlavorOrganization(products);
     stampExpressDelivery(products);
     const specialSource = Array.isArray(data.specials) ? data.specials : defaults.specials;
@@ -927,6 +977,7 @@
         ...defaults.settings,
         ...settings,
         addonMenuV1: Boolean(settings.addonMenuV1) || addonMenuAdded,
+        savouryMenuV1: Boolean(settings.savouryMenuV1) || savouryMenuAdded,
         bakeryName:
           settings.bakeryName === ["Sweet", "Layer", "Bakery"].join(" ")
             ? defaults.settings.bakeryName
