@@ -230,6 +230,28 @@
       ? `${filteredProducts.length} of ${products.length} cakes found${filterLabel}`
       : `${products.length} cakes available`;
 
+    // Group the filtered cakes by their category, preserving the category
+    // order managed in the admin panel.
+    const order = (data.categories || []).map((name) => name.toLowerCase());
+    const groups = new Map();
+    filteredProducts.forEach((product) => {
+      const name = (product.category || "More Cakes").trim() || "More Cakes";
+      const key = name.toLowerCase();
+      if (!groups.has(key)) {
+        groups.set(key, { name, order: order.indexOf(key), items: [] });
+      }
+      groups.get(key).items.push(product);
+    });
+
+    const sections = Array.from(groups.values()).sort((a, b) => {
+      const rankA = a.order === -1 ? 999 : a.order;
+      const rankB = b.order === -1 ? 999 : b.order;
+      if (rankA !== rankB) {
+        return rankA - rankB;
+      }
+      return a.name.localeCompare(b.name);
+    });
+
     if (!filteredProducts.length) {
       elements.productGrid.innerHTML = `
         <div class="empty-state catalog-empty">
@@ -240,8 +262,22 @@
       return;
     }
 
-    elements.productGrid.innerHTML = filteredProducts
-      .map((product, index) => productCardTemplate(product, index))
+    let staggerIndex = 0;
+    elements.productGrid.innerHTML = sections
+      .map((section) => {
+        const cards = section.items
+          .map((product) => productCardTemplate(product, staggerIndex++))
+          .join("");
+        return `
+          <section class="category-block" data-category-name="${dataApi.escapeHtml(section.name)}">
+            <div class="category-head">
+              <h3>${dataApi.escapeHtml(section.name)}</h3>
+              <span class="category-count">${section.items.length} ${section.items.length === 1 ? "cake" : "cakes"}</span>
+            </div>
+            <div class="product-grid">${cards}</div>
+          </section>
+        `;
+      })
       .join("");
 
     revealCards();

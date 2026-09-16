@@ -693,6 +693,39 @@ main {
   gap: 18px;
 }
 
+/* Category blocks: one Luxe section per cake category, in admin order */
+.category-block + .category-block {
+  margin-top: 40px;
+}
+
+.category-head {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  margin: 0 0 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--line);
+}
+
+.category-head h3 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 520;
+  letter-spacing: -0.01em;
+  font-size: clamp(1.35rem, 2.2vw, 1.8rem);
+  line-height: 1.1;
+  color: var(--ink);
+}
+
+.category-count {
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--gold-deep);
+  white-space: nowrap;
+}
+
 .product-card {
   display: flex;
   flex-direction: column;
