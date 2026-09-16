@@ -270,12 +270,31 @@
           </div>
           <div class="product-action">
             <span>${dataApi.escapeHtml(selected.kg)} starts here</span>
-            <button class="primary-button" type="button" data-action="add" data-product-id="${dataApi.escapeHtml(product.id)}">
-              Add ${dataApi.formatPrice(selected.price)}
-            </button>
+            ${productActionHtml(product, selected)}
           </div>
         </div>
       </article>
+    `;
+  }
+
+  function productActionHtml(product, selected) {
+    const key = findCartKey(product.id);
+    const qty = key ? cart.find((item) => item.key === key)?.qty || 0 : 0;
+
+    if (!qty) {
+      return `
+        <button class="primary-button" type="button" data-action="add" data-product-id="${dataApi.escapeHtml(product.id)}">
+          Add ${dataApi.formatPrice(selected.price)}
+        </button>
+      `;
+    }
+
+    return `
+      <div class="qty-stepper" role="group" aria-label="${dataApi.escapeHtml(product.name)} quantity">
+        <button type="button" data-action="decrease" data-product-id="${dataApi.escapeHtml(product.id)}" aria-label="Remove one">−</button>
+        <span>${qty}</span>
+        <button type="button" data-action="increase" data-product-id="${dataApi.escapeHtml(product.id)}" aria-label="Add one more">+</button>
+      </div>
     `;
   }
 
@@ -445,6 +464,14 @@
 
     if (button.dataset.action === "add") {
       addToCart(product);
+      return;
+    }
+
+    if (button.dataset.action === "increase" || button.dataset.action === "decrease") {
+      const key = findCartKey(productId);
+      if (key) {
+        changeCartQty(key, button.dataset.action === "increase" ? 1 : -1);
+      }
     }
   }
 
@@ -477,6 +504,16 @@
     openCart();
   }
 
+  function findCartKey(productId) {
+    const variantIndex = selectedVariants[productId] ?? 0;
+    const product = data.products.find((item) => item.id === productId);
+    const variant = product && (product.variants[variantIndex] || product.variants[0]);
+    if (!variant) {
+      return null;
+    }
+    return `${productId}:${variant.kg}:${variant.price}`;
+  }
+
   function addToCart(product) {
     const variantIndex = selectedVariants[product.id] ?? 0;
     const variant = product.variants[variantIndex] || product.variants[0];
@@ -500,7 +537,55 @@
 
     dataApi.saveCart(cart);
     renderCart();
-    openCart();
+  }
+
+  function changeCartQty(key, delta) {
+    const item = cart.find((entry) => entry.key === key);
+    if (!item) {
+      return;
+    }
+
+    item.qty += delta;
+
+    if (item.qty <= 0) {
+      cart = cart.filter((entry) => entry.key !== key);
+    }
+
+    dataApi.saveCart(cart);
+    renderCart();
+  }
+
+  function updateAllProductActions() {
+    elements.productGrid.querySelectorAll(".product-card").forEach((card) => {
+      const marker = card.querySelector("[data-product-id]");
+      if (marker) {
+        updateProductAction(marker.dataset.productId);
+      }
+    });
+  }
+
+  function updateProductAction(productId) {
+    const product = data.products.find((item) => item.id === productId);
+    if (!product) {
+      return;
+    }
+
+    const variantIndex = selectedVariants[productId] ?? 0;
+    const selected = product.variants[variantIndex] || product.variants[0] || { kg: "1 kg", price: 0 };
+    const attribute = dataApi.escapeHtml(productId);
+    const marker = elements.productGrid.querySelector(`[data-product-id="${attribute}"]`);
+    const card = marker ? marker.closest(".product-card") : null;
+    if (!card) {
+      return;
+    }
+
+    const action = card.querySelector(".product-action");
+    if (action) {
+      action.innerHTML = `
+        <span>${dataApi.escapeHtml(selected.kg)} starts here</span>
+        ${productActionHtml(product, selected)}
+      `;
+    }
   }
 
   function renderAddOns() {
@@ -572,6 +657,8 @@
       void elements.cartCount.offsetWidth;
       elements.cartCount.classList.add("pop");
     }
+
+    updateAllProductActions();
 
     if (!cart.length) {
       elements.cartItems.innerHTML = `
