@@ -254,6 +254,17 @@
       return a.name.localeCompare(b.name);
     });
 
+    // Show every category from the admin list even when it has no cakes yet
+    // (a brand-new flavor reads as "coming soon" instead of vanishing).
+    if (!productSearchTerm && kgFilterValue === "all") {
+      (data.categories || []).forEach((name, rank) => {
+        const key = String(name).trim().toLowerCase();
+        if (!groups.has(key)) {
+          sections.push({ name: String(name).trim(), order: rank, items: [] });
+        }
+      });
+    }
+
     const searchOrFilter = Boolean(productSearchTerm) || kgFilterValue !== "all";
 
     if (!categoriesInitialized) {
@@ -278,16 +289,26 @@
       .map((section, sectionIndex) => {
         const key = section.name.toLowerCase();
         const isOpen = searchOrFilter ? true : openCategories.has(key);
-        const cards = section.items
-          .map((product) => productCardTemplate(product, staggerIndex++))
-          .join("");
-        const thumb = section.items.length ? dataApi.getProductImage(section.items[0]) : "";
+        // Empty categories still get art: generate a default cake image from
+        // the category name so the header never shows a broken icon.
+        const thumb = dataApi.getProductImage(section.items[0] || { name: section.name });
+        const isCustom = section.name.trim().toLowerCase() === "customized cakes";
+        const deliveryTag = isCustom ? "" : `<span class="category-delivery">60 min delivery</span>`;
+        const countLabel = section.items.length
+          ? `${section.items.length} ${section.items.length === 1 ? "cake" : "cakes"}`
+          : "Coming soon";
+        const cards = section.items.length
+          ? section.items.map((product) => productCardTemplate(product, staggerIndex++)).join("")
+          : `<p class="category-empty-note">Fresh bakes are landing in this dropdown soon.</p>`;
         return `
           <section class="category-block ${isOpen ? "open" : ""}" data-category-name="${dataApi.escapeHtml(section.name)}">
             <button class="category-head" type="button" data-category-toggle aria-expanded="${isOpen}" aria-controls="categoryBody${sectionIndex}">
               <img class="category-thumb" src="${dataApi.escapeHtml(thumb)}" alt="" loading="lazy" />
               <h3>${dataApi.escapeHtml(section.name)}</h3>
-              <span class="category-count">${section.items.length} ${section.items.length === 1 ? "cake" : "cakes"}</span>
+              <span class="category-head-meta">
+                ${deliveryTag}
+                <span class="category-count">${countLabel}</span>
+              </span>
               <span class="category-chevron" aria-hidden="true">&#9662;</span>
             </button>
             <div class="category-body" id="categoryBody${sectionIndex}">

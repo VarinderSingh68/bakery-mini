@@ -595,11 +595,20 @@
         }
       },
       categories: [
-        "Chocolate Classics",
-        "Cream Cakes",
-        "Fruit Cakes",
-        "Celebration Cakes",
-        "Premium Specials"
+        "Pineapple",
+        "Mango",
+        "Raspberry",
+        "Blueberry",
+        "Chocolate",
+        "Butterscotch",
+        "Oreo",
+        "KitKat",
+        "Mix Fruit",
+        "Truffle",
+        "Biscoff",
+        "Savouries",
+        "Add-ons",
+        "Customized Cakes"
       ],
       products,
       addOns: [
@@ -722,6 +731,85 @@
     return JSON.parse(JSON.stringify(value));
   }
 
+  // Flavor dropdown lineup shown on the storefront. Existing owner-made
+  // categories are kept; any missing flavor is appended (idempotent).
+  const FLAVOR_CATEGORIES = [
+    "Pineapple",
+    "Mango",
+    "Raspberry",
+    "Blueberry",
+    "Chocolate",
+    "Butterscotch",
+    "Oreo",
+    "KitKat",
+    "Mix Fruit",
+    "Truffle",
+    "Biscoff",
+    "Savouries",
+    "Add-ons",
+    "Customized Cakes"
+  ];
+
+  function mergeFlavorCategories(existingCategories, fallbackCategories) {
+    const source = Array.isArray(existingCategories) && existingCategories.length ? existingCategories : fallbackCategories;
+    const seen = new Set();
+    const merged = [];
+    source.forEach((name) => {
+      const key = String(name).trim().toLowerCase();
+      if (!key || seen.has(key)) { return; }
+      seen.add(key);
+      merged.push(String(name).trim());
+    });
+    FLAVOR_CATEGORIES.forEach((name) => {
+      if (!seen.has(name.toLowerCase())) {
+        seen.add(name.toLowerCase());
+        merged.push(name);
+      }
+    });
+    return merged;
+  }
+
+  function flavorCategoryForName(name) {
+    // Maps a cake NAME to its flavor dropdown. Chocolate is checked before
+    // Truffle so "Chocolate Truffle" lands in Chocolate, not Truffle.
+    const text = String(name || "").toLowerCase();
+    if (!text) { return null; }
+    if (text.includes("pineapple")) { return "Pineapple"; }
+    if (text.includes("mango")) { return "Mango"; }
+    if (text.includes("raspberry")) { return "Raspberry"; }
+    if (text.includes("blueberry")) { return "Blueberry"; }
+    if (text.includes("biscoff")) { return "Biscoff"; }
+    if (text.includes("oreo")) { return "Oreo"; }
+    if (text.includes("kitkat") || text.includes("kit kat")) { return "KitKat"; }
+    if (text.includes("butterscotch") || text.includes("butter scotch")) { return "Butterscotch"; }
+    if (text.includes("mixfruit") || text.includes("mix fruit") || text.includes("mixed fruit")) { return "Mix Fruit"; }
+    if (text.includes("chocolat") || text.includes("choco")) { return "Chocolate"; }
+    if (text.includes("truffle")) { return "Truffle"; }
+    return null;
+  }
+
+  function applyFlavorOrganization(products) {
+    // Idempotent filing: a cake whose name names a flavor joins that
+    // flavor's category; everything else keeps the owner's category.
+    products.forEach((product) => {
+      const flavor = flavorCategoryForName(product.name);
+      if (flavor) {
+        product.category = flavor;
+      }
+    });
+  }
+
+  function isCustomCakeCategory(category) {
+    return String(category || "").trim().toLowerCase() === "customized cakes";
+  }
+
+  function stampExpressDelivery(products) {
+    // Every category promises 60-minute delivery except Customized Cakes.
+    products.forEach((product) => {
+      product.expressDelivery = !isCustomCakeCategory(product.category);
+    });
+  }
+
   function normalizeData(input) {
     const defaults = getDefaultData();
     const data = input && typeof input === "object" ? input : {};
@@ -739,6 +827,9 @@
         variants: cleanVariants(product.variants, fallbackProduct.variants)
       };
     });
+    const migratedCategories = mergeFlavorCategories(data.categories, defaults.categories);
+    applyFlavorOrganization(products);
+    stampExpressDelivery(products);
     const specialSource = Array.isArray(data.specials) ? data.specials : defaults.specials;
 
     return {
@@ -766,7 +857,7 @@
           ownerTemplateId: emailjs.ownerTemplateId || defaults.settings.emailjs.ownerTemplateId
         }
       },
-      categories: Array.isArray(data.categories) && data.categories.length ? data.categories : defaults.categories,
+      categories: migratedCategories,
       products,
       addOns: Array.isArray(data.addOns) && data.addOns.length ? data.addOns : defaults.addOns,
       specials: specialSource.map((special, index) => normalizeSpecial(special, products, defaults.specials[index])),
