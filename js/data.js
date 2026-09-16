@@ -606,6 +606,10 @@
         "Mix Fruit",
         "Truffle",
         "Biscoff",
+        "Black Forest",
+        "White Forest",
+        "Strawberry",
+        "Rasmalai",
         "Savouries",
         "Add-ons",
         "Customized Cakes"
@@ -745,6 +749,10 @@
     "Mix Fruit",
     "Truffle",
     "Biscoff",
+    "Black Forest",
+    "White Forest",
+    "Strawberry",
+    "Rasmalai",
     "Savouries",
     "Add-ons",
     "Customized Cakes"
@@ -760,10 +768,16 @@
       seen.add(key);
       merged.push(String(name).trim());
     });
+    // Missing flavors slot in before "Customized Cakes" (kept last) so new
+    // dropdowns stay grouped with the menu instead of dangling after it.
+    const customIndex = merged.findIndex((name) => name.toLowerCase() === "customized cakes");
     FLAVOR_CATEGORIES.forEach((name) => {
-      if (!seen.has(name.toLowerCase())) {
-        seen.add(name.toLowerCase());
+      if (seen.has(name.toLowerCase())) { return; }
+      seen.add(name.toLowerCase());
+      if (customIndex === -1) {
         merged.push(name);
+      } else {
+        merged.splice(merged.findIndex((entry) => entry.toLowerCase() === "customized cakes"), 0, name);
       }
     });
     return merged;
@@ -774,6 +788,10 @@
     // Truffle so "Chocolate Truffle" lands in Chocolate, not Truffle.
     const text = String(name || "").toLowerCase();
     if (!text) { return null; }
+    if (text.includes("black forest")) { return "Black Forest"; }
+    if (text.includes("white forest")) { return "White Forest"; }
+    if (text.includes("strawberry")) { return "Strawberry"; }
+    if (text.includes("rasmalai") || text.includes("ras malai")) { return "Rasmalai"; }
     if (text.includes("pineapple")) { return "Pineapple"; }
     if (text.includes("mango")) { return "Mango"; }
     if (text.includes("raspberry")) { return "Raspberry"; }
@@ -791,7 +809,11 @@
   function applyFlavorOrganization(products) {
     // Idempotent filing: a cake whose name names a flavor joins that
     // flavor's category; everything else keeps the owner's category.
+    // Add-on menu items are exempt (Blueberry Tub Cake belongs to Add-ons).
     products.forEach((product) => {
+      if (String(product.id || "").startsWith("addonmenu-")) {
+        return;
+      }
       const flavor = flavorCategoryForName(product.name);
       if (flavor) {
         product.category = flavor;
@@ -801,6 +823,69 @@
 
   function isCustomCakeCategory(category) {
     return String(category || "").trim().toLowerCase() === "customized cakes";
+  }
+
+  // The owner's printed ADD-ON menu (WhatsApp image), priced in rupees.
+  // Injected once per browser/cloud so it appears in the Add-ons dropdown
+  // without manual entry; the owner can edit prices/photos in admin after.
+  const ADDON_MENU_ITEMS = [
+    { id: "addonmenu-spark-candle", name: "Spark Candle", price: 40, unit: "1 pc", group: "Candles", description: "Slim sparkling candle for the cake moment." },
+    { id: "addonmenu-magic-candle", name: "Magic Candle", price: 70, unit: "1 pc", group: "Candles", description: "Relighting magic candle that surprises everyone." },
+    { id: "addonmenu-spiral-candle", name: "Spiral Candle", price: 80, unit: "1 pc", group: "Candles", description: "Colorful spiral candle with a steady flame." },
+    { id: "addonmenu-rainbow-candle", name: "Rainbow Candle", price: 60, unit: "1 pc", group: "Candles", description: "Rainbow-striped candle for happy birthdays." },
+    { id: "addonmenu-candle-box", name: "Candle Box", price: 10, unit: "1 pc", group: "Candles", description: "Simple box to carry your candles safely." },
+    { id: "addonmenu-number-candle", name: "Number Candle", price: 50, unit: "1 pc", group: "Candles", description: "Gold number candle - tell us the age at checkout." },
+    { id: "addonmenu-letter-candle", name: "Happy Birthday Letter Candle", price: 130, unit: "1 set", group: "Candles", description: "Full Happy Birthday letter candle set." },
+    { id: "addonmenu-balloon-candle", name: "Balloon Candle", price: 99, unit: "1 pc", group: "Candles", description: "Balloon-shaped candle in festive colors." },
+    { id: "addonmenu-star-candle", name: "Star Candle", price: 99, unit: "1 pc", group: "Candles", description: "Star-topped candle for little dreamers." },
+    { id: "addonmenu-heart-candle", name: "Heart Candle", price: 99, unit: "1 pc", group: "Candles", description: "Heart-shaped candle for anniversaries and love." },
+    { id: "addonmenu-bday-girl-cap", name: "Birthday Girl Cap", price: 50, unit: "1 pc", group: "Birthday Cap", description: "Glittery Birthday Girl cap." },
+    { id: "addonmenu-bday-boy-cap", name: "Birthday Boy Cap", price: 50, unit: "1 pc", group: "Birthday Cap", description: "Glittery Birthday Boy cap." },
+    { id: "addonmenu-simple-cap", name: "Simple Birthday Cap", price: 30, unit: "1 pc", group: "Birthday Cap", description: "Classic cone birthday cap." },
+    { id: "addonmenu-hbd-banner", name: "Happy Birthday Banner", price: 80, unit: "1 pc", group: "Party Decoration", description: "Happy Birthday lettering banner." },
+    { id: "addonmenu-hbd-foil-banner", name: "Happy Birthday Foil Banner", price: 130, unit: "1 pc", group: "Party Decoration", description: "Shiny foil Happy Birthday banner." },
+    { id: "addonmenu-anniv-banner", name: "Happy Anniversary Banner", price: 90, unit: "1 pc", group: "Party Decoration", description: "Happy Anniversary lettering banner." },
+    { id: "addonmenu-anniv-foil-banner", name: "Happy Anniversary Foil Banner", price: 150, unit: "1 pc", group: "Party Decoration", description: "Shiny foil Happy Anniversary banner." },
+    { id: "addonmenu-hbd-pack", name: "Happy Birthday Pack", price: 250, unit: "1 pack", group: "Party Decoration", description: "Complete birthday decoration combo pack." },
+    { id: "addonmenu-anniv-pack", name: "Happy Anniversary Pack", price: 300, unit: "1 pack", group: "Party Decoration", description: "Complete anniversary decoration combo pack." },
+    { id: "addonmenu-hbd-foil-pack", name: "Happy Birthday Foil Pack", price: 300, unit: "1 pack", group: "Party Decoration", description: "Premium foil birthday decoration pack." },
+    { id: "addonmenu-anniv-foil-pack", name: "Happy Anniversary Foil Pack", price: 350, unit: "1 pack", group: "Party Decoration", description: "Premium foil anniversary decoration pack." },
+    { id: "addonmenu-acrylic-topper-small", name: "Acrylic Cake Topper Small", price: 20, unit: "1 pc", group: "Cake Topper", description: "Small acrylic topper for the cake centre." },
+    { id: "addonmenu-acrylic-topper-large", name: "Acrylic Cake Topper Large", price: 50, unit: "1 pc", group: "Cake Topper", description: "Large acrylic topper that steals the show." },
+    { id: "addonmenu-paper-topper", name: "Paper Topper", price: 60, unit: "1 pc", group: "Cake Topper", description: "Printed paper topper for quick styling." },
+    { id: "addonmenu-blueberry-tub", name: "Blueberry Tub Cake", price: 110, unit: "1 tub", group: "Cake Topper", description: "Single-serve blueberry tub cake." },
+    { id: "addonmenu-strawberry-tub", name: "Strawberry Tub Cake", price: 110, unit: "1 tub", group: "Cake Topper", description: "Single-serve strawberry tub cake." },
+    { id: "addonmenu-tiramisu-tub", name: "Tiramisu Tub Cake", price: 130, unit: "1 tub", group: "Cake Topper", description: "Single-serve tiramisu tub cake." },
+    { id: "addonmenu-party-popper", name: "Party Popper", price: 130, unit: "1 pc", group: "Extras", description: "Confetti party popper for the big reveal." },
+    { id: "addonmenu-snow-spray", name: "Snow Spray", price: 99, unit: "1 pc", group: "Extras", description: "Snow spray for a dreamy cake table." },
+    { id: "addonmenu-ribbon-spray", name: "Ribbon Spray", price: 99, unit: "1 pc", group: "Extras", description: "Ribbon spray to dress up the celebration." }
+  ];
+
+  function injectAddonMenu(products, settings) {
+    // Runs once per catalog (flag travels with the synced data, so items the
+    // owner later deletes in admin stay deleted).
+    if (settings && settings.addonMenuV1) {
+      return false;
+    }
+    const existing = new Set(products.map((product) => product.id));
+    let added = false;
+    ADDON_MENU_ITEMS.forEach((item) => {
+      if (existing.has(item.id)) {
+        return;
+      }
+      products.push({
+        id: item.id,
+        name: item.name,
+        category: "Add-ons",
+        description: item.description,
+        details: item.group,
+        image: "",
+        active: true,
+        variants: [{ kg: item.unit, price: item.price }]
+      });
+      added = true;
+    });
+    return added;
   }
 
   function stampExpressDelivery(products) {
@@ -828,6 +913,7 @@
       };
     });
     const migratedCategories = mergeFlavorCategories(data.categories, defaults.categories);
+    const addonMenuAdded = injectAddonMenu(products, settings);
     applyFlavorOrganization(products);
     stampExpressDelivery(products);
     const specialSource = Array.isArray(data.specials) ? data.specials : defaults.specials;
@@ -840,6 +926,7 @@
       settings: {
         ...defaults.settings,
         ...settings,
+        addonMenuV1: Boolean(settings.addonMenuV1) || addonMenuAdded,
         bakeryName:
           settings.bakeryName === ["Sweet", "Layer", "Bakery"].join(" ")
             ? defaults.settings.bakeryName
