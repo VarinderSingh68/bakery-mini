@@ -751,13 +751,22 @@ main {
 
 .category-thumb {
   flex: 0 0 auto;
-  width: 72px;
-  height: 72px;
+  width: 84px;
+  height: 84px;
   object-fit: cover;
-  border-radius: 16px;
+  border-radius: 18px;
   border: 1px solid rgba(60, 148, 80, 0.35);
   box-shadow: 0 6px 14px -6px rgba(31, 53, 39, 0.3);
   background: var(--cream);
+}
+
+.category-head-text {
+  display: flex;
+  flex: 1 1 auto;
+  min-width: 0;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 7px;
 }
 
 .category-head h3 {
@@ -768,7 +777,7 @@ main {
   font-size: clamp(1.2rem, 2vw, 1.5rem);
   line-height: 1.1;
   color: var(--ink);
-  flex: 1;
+  flex: 0 0 auto;
 }
 
 .category-count {
@@ -1923,13 +1932,17 @@ body[data-page="admin"] {
   }
 
   .category-thumb {
-    width: 56px;
-    height: 56px;
+    width: 64px;
+    height: 64px;
   }
 
   .category-head {
     padding: 12px 14px;
     gap: 12px;
+  }
+
+  .category-head-text {
+    gap: 5px;
   }
 
   .category-delivery {

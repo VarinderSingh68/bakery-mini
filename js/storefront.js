@@ -300,10 +300,12 @@
           <section class="category-block ${isOpen ? "open" : ""}" data-category-name="${dataApi.escapeHtml(section.name)}">
             <button class="category-head" type="button" data-category-toggle aria-expanded="${isOpen}" aria-controls="categoryBody${sectionIndex}">
               <img class="category-thumb" src="${dataApi.escapeHtml(thumb)}" alt="" loading="lazy" />
-              <h3>${dataApi.escapeHtml(section.name)}</h3>
-              <span class="category-head-meta">
-                ${deliveryTag}
-                <span class="category-count">${countLabel}</span>
+              <span class="category-head-text">
+                <h3>${dataApi.escapeHtml(section.name)}</h3>
+                <span class="category-head-meta">
+                  ${deliveryTag}
+                  <span class="category-count">${countLabel}</span>
+                </span>
               </span>
               <span class="category-chevron" aria-hidden="true">&#9662;</span>
             </button>
