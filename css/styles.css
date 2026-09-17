@@ -33,7 +33,7 @@
   --radius: 14px;
   --radius-lg: 22px;
   --ease-lux: cubic-bezier(0.22, 1, 0.36, 1);
-  --font-display: "Baloo 2", "Comic Sans MS", "Segoe UI", cursive, sans-serif;
+  --font-display: "Cherry Bomb One", "Baloo 2", "Comic Sans MS", cursive, sans-serif;
   --font-body: "Quicksand", "Trebuchet MS", ui-sans-serif, system-ui, sans-serif;
 }
 
@@ -1025,27 +1025,33 @@ main {
 
 .confetti-burst i {
   position: absolute;
-  width: 7px;
-  height: 10px;
-  margin: -5px 0 0 -3.5px;
+  width: 9px;
+  height: 13px;
+  margin: -6px 0 0 -4.5px;
   border-radius: 2px;
   opacity: 0;
-  animation: confetti-fly 0.5s var(--ease-lux) forwards;
+  animation: confetti-fly 2s cubic-bezier(0.16, 0.7, 0.45, 1) forwards;
 }
 
 @keyframes confetti-fly {
   0% {
     opacity: 1;
-    transform: translate(0, 0) rotate(0deg) scale(1);
+    transform: translate(0, 0) rotate(0deg) scale(0.4);
   }
 
-  70% {
+  12% {
     opacity: 1;
+    transform: translate(calc(var(--dx) * 0.32), calc(var(--dy) * 0.32 - 50px)) rotate(calc(var(--rot) * 0.35)) scale(1.15);
+  }
+
+  55% {
+    opacity: 1;
+    transform: translate(var(--dx), var(--dy)) rotate(var(--rot)) scale(1);
   }
 
   100% {
     opacity: 0;
-    transform: translate(var(--dx), var(--dy)) rotate(var(--rot)) scale(0.6);
+    transform: translate(calc(var(--dx) * 1.12), calc(var(--dy) + var(--fall))) rotate(calc(var(--rot) * 1.7)) scale(0.75);
   }
 }
 
