@@ -487,8 +487,16 @@ main {
   font-size: 1.1rem;
 }
 
-.contact-ribbon:hover .contact-ribbon-track {
-  animation-play-state: paused;
+@media (hover: hover) and (pointer: fine) {
+  .contact-ribbon:hover .contact-ribbon-track {
+    animation-play-state: paused;
+  }
+}
+
+@media (hover: none) {
+  .contact-ribbon-track {
+    animation-play-state: running !important;
+  }
 }
 
 .special-strip,
@@ -637,8 +645,16 @@ main {
   animation: slideSpecials 34s linear infinite;
 }
 
-.special-window:hover .special-track {
-  animation-play-state: paused;
+@media (hover: hover) and (pointer: fine) {
+  .special-window:hover .special-track {
+    animation-play-state: paused;
+  }
+}
+
+@media (hover: none) {
+  .special-track {
+    animation-play-state: running !important;
+  }
 }
 
 .special-card {
