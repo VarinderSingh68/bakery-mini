@@ -14,7 +14,7 @@
       href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=Manrope:wght@400..800&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="css/styles.css?v=20260924a" />
+    <link rel="stylesheet" href="css/styles.css?v=20260924c" />
   </head>
   <body data-page="storefront">
     <header class="site-header">
@@ -69,7 +69,7 @@
 
       <section class="offers-ribbon" aria-label="Bakery offers">
         <div class="offers-ribbon-track" id="offersTrack">
-          <b>🚚 Free home delivery</b>
+          <b>🚚 Free delivery up to Rs. 1000</b>
           <span aria-hidden="true">✦</span>
           <b>🕓 Open 24 / 7</b>
           <span aria-hidden="true">✦</span>
@@ -77,7 +77,7 @@
           <span aria-hidden="true">✦</span>
           <b>📞 Call or WhatsApp anytime</b>
           <span aria-hidden="true">✦</span>
-          <b>🚚 Free home delivery</b>
+          <b>🚚 Free delivery up to Rs. 1000</b>
           <span aria-hidden="true">✦</span>
           <b>🕓 Open 24 / 7</b>
           <span aria-hidden="true">✦</span>
@@ -155,6 +155,11 @@
         </div>
         <p class="coupon-note" id="couponNote" role="status"></p>
 
+        <div class="total-line delivery-line">
+          <span>Delivery</span>
+          <strong id="cartDelivery">—</strong>
+        </div>
+
         <div class="total-line">
           <span>Total</span>
           <strong id="cartTotal">Rs. 0</strong>
@@ -211,10 +216,32 @@
       <span id="footerContact">Fresh cakes prepared for every celebration.</span>
     </footer>
 
-    <a class="call-now-fab" id="callNowFab" href="tel:+919876665757" aria-label="Call now">
+    <a class="call-now-fab" id="callNowFab" href="tel:+919876665757" aria-label="Contact us">
       <span class="call-fab-icon" aria-hidden="true">📞</span>
-      <span class="call-fab-label">Call Now</span>
+      <span class="call-fab-label">Contact Us</span>
     </a>
+
+    <div class="contact-sheet" id="contactSheet" aria-hidden="true">
+      <div class="contact-sheet-card" role="dialog" aria-modal="false" aria-labelledby="contactSheetTitle">
+        <button class="contact-sheet-close" id="contactSheetClose" type="button" aria-label="Close contact options">x</button>
+        <p class="eyebrow">We're open 24 / 7</p>
+        <h2 id="contactSheetTitle">Contact us</h2>
+        <a class="contact-option call" id="contactCall" href="tel:+919876665757">
+          <span class="contact-option-icon" aria-hidden="true">📞</span>
+          <span class="contact-option-text">
+            <strong>Call now</strong>
+            <small id="contactCallNumber">+91 98766 65757</small>
+          </span>
+        </a>
+        <a class="contact-option whatsapp" id="contactWhatsapp" href="https://wa.me/919876665757" target="_blank" rel="noopener">
+          <span class="contact-option-icon" aria-hidden="true">💬</span>
+          <span class="contact-option-text">
+            <strong>WhatsApp</strong>
+            <small>Chat with us instantly</small>
+          </span>
+        </a>
+      </div>
+    </div>
 
     <div class="coupon-popup" id="couponPopup" aria-hidden="true" role="dialog" aria-modal="false" aria-labelledby="couponPopupTitle">
       <div class="coupon-card" role="document">
@@ -224,6 +251,7 @@
         <p class="coupon-desc">Use this coupon at checkout and save on your celebration order.</p>
         <div class="coupon-code-row">
           <strong class="coupon-code" id="couponPopupCode">SWEET10</strong>
+          <button class="coupon-copy" id="couponCopy" type="button" aria-label="Copy coupon code">Copy</button>
           <span class="coupon-save" id="couponPopupSave">10% OFF</span>
         </div>
         <button class="primary-button full" id="couponUse" type="button">Use coupon</button>
@@ -232,6 +260,6 @@
 
     <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
     <script src="js/data.js?v=20260920-sync1"></script>
-    <script src="js/storefront.js?v=20260924a"></script>
+    <script src="js/storefront.js?v=20260924c"></script>
   </body>
 </html>

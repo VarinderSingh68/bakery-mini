@@ -63,22 +63,27 @@
     couponPopupSave: document.getElementById("couponPopupSave"),
     callNowFab: document.getElementById("callNowFab"),
     offersTrack: document.getElementById("offersTrack"),
+    contactSheet: document.getElementById("contactSheet"),
+    contactSheetClose: document.getElementById("contactSheetClose"),
+    contactCall: document.getElementById("contactCall"),
+    contactWhatsapp: document.getElementById("contactWhatsapp"),
+    contactCallNumber: document.getElementById("contactCallNumber"),
+    cartDelivery: document.getElementById("cartDelivery"),
+    couponCopy: document.getElementById("couponCopy"),
     footerContact: document.getElementById("footerContact"),
     productSearch: document.getElementById("productSearch"),
     kgFilter: document.getElementById("kgFilter"),
     catalogCount: document.getElementById("catalogCount")
   };
 
-  // Sliding ribbons (contact ticker + celebration picks) can freeze on some
-  // phones (battery saver, stale touch-hover states). This watchdog samples
-  // each track's position: if it stops moving it restarts the CSS animation,
-  // and if it keeps freezing it drives the slide manually so the tracks
-  // always glide the moment the page opens.
+  // Sliding ribbons (contact ticker + celebration picks + offers) can freeze
+  // on some phones (battery saver, stale touch-hover states, system
+  // "remove animations" setting). This watchdog samples each track's
+  // position: if it stops moving it restarts the CSS animation, and if it
+  // keeps freezing (or reduced-motion is on) it drives the slide in JS so
+  // the tracks always glide the moment the page opens.
   function startMarqueeWatchers() {
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      return;
-    }
-
+    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const readX = (el) => {
       const m = getComputedStyle(el).transform;
       if (!m || m === "none") return 0;
@@ -99,7 +104,7 @@
         let lastX = null;
         let lastChange = performance.now();
         let stuckCount = 0;
-        let manual = false;
+        let manual = reducedMotion; // reduced-motion phones: drive directly in JS
         let offset = 0;
         let lastTick = 0;
 
@@ -193,6 +198,15 @@
       node.textContent = settings.bakeryName;
     });
     elements.footerContact.textContent = `${settings.phone || ""} ${settings.address ? " | " + settings.address : ""}`;
+
+    // Keep the Contact Us sheet and FAB synced to the owner number from settings.
+    const digits = (settings.phone || "").replace(/\D/g, "");
+    const tel = digits ? `tel:+${digits}` : "tel:+919876665757";
+    const wa = digits ? `https://wa.me/${digits}` : "https://wa.me/919876665757";
+    elements.contactCall.href = tel;
+    elements.contactWhatsapp.href = wa;
+    elements.contactCallNumber.textContent = settings.phone || "";
+    elements.callNowFab.href = "#contact";
   }
 
   function renderHero() {
@@ -525,6 +539,7 @@
       }
     });
     elements.couponPopupClose.addEventListener("click", closeCouponPopup);
+    elements.couponCopy.addEventListener("click", copyCouponCode);
     elements.couponUse.addEventListener("click", () => {
       applyCoupon(elements.couponPopupCode.textContent);
       closeCouponPopup();
@@ -532,6 +547,14 @@
     });
     elements.couponPopup.addEventListener("click", (event) => {
       if (event.target === elements.couponPopup) closeCouponPopup();
+    });
+    elements.callNowFab.addEventListener("click", (event) => {
+      event.preventDefault();
+      openContactSheet();
+    });
+    elements.contactSheetClose.addEventListener("click", closeContactSheet);
+    elements.contactSheet.addEventListener("click", (event) => {
+      if (event.target === elements.contactSheet) closeContactSheet();
     });
     elements.productSearch.addEventListener("input", (event) => {
       productSearchTerm = event.target.value.trim().toLowerCase();
@@ -897,6 +920,11 @@
     elements.cartTotal.textContent = dataApi.formatPrice(total);
     elements.placeOrder.disabled = cart.length === 0;
     renderCouponRow();
+    const subtotal = cart.reduce((sum, item) => sum + item.price * item.qty, 0);
+    const fee = deliveryFee(Math.max(0, subtotal - (activeCoupon ? (activeCoupon.type === "percent" ? Math.round(subtotal * activeCoupon.value / 100) : activeCoupon.value) : 0)));
+    if (elements.cartDelivery) {
+      elements.cartDelivery.textContent = fee === 0 ? "FREE" : dataApi.formatPrice(fee);
+    }
 
     if (previousCount !== String(count)) {
       elements.cartCount.classList.remove("pop");
@@ -946,13 +974,20 @@
       .join("");
   }
 
+  // Delivery is free up to Rs. 1000 (order value); beyond that a flat fee applies.
+  const FREE_DELIVERY_UPTO = 1000;
+  const DELIVERY_FEE = 40;
+
+  function deliveryFee(subtotal) {
+    return subtotal >= FREE_DELIVERY_UPTO ? 0 : DELIVERY_FEE;
+  }
+
   function cartTotal() {
     const subtotal = cart.reduce((sum, item) => sum + item.price * item.qty, 0);
-    if (!activeCoupon) {
-      return subtotal;
-    }
-    const discount = couponDiscount(subtotal);
-    return Math.max(0, subtotal - discount);
+    const discount = activeCoupon ? couponDiscount(subtotal) : 0;
+    const couponed = Math.max(0, subtotal - discount);
+    return couponed + deliveryFee(couponed);
+
     function couponDiscount(amount) {
       if (activeCoupon.type === "percent") {
         return Math.round(amount * (activeCoupon.value / 100));
@@ -1060,6 +1095,46 @@
     elements.couponPopup.classList.add("show");
   }
 
+  function openContactSheet() {
+    elements.contactSheet.setAttribute("aria-hidden", "false");
+    elements.contactSheet.classList.add("show");
+  }
+
+  function closeContactSheet() {
+    elements.contactSheet.setAttribute("aria-hidden", "true");
+    elements.contactSheet.classList.remove("show");
+  }
+
+  function copyCouponCode() {
+    const code = elements.couponPopupCode.textContent;
+    const done = () => {
+      elements.couponCopy.textContent = "Copied!";
+      window.setTimeout(() => {
+        elements.couponCopy.textContent = "Copy";
+      }, 1400);
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(code).then(done).catch(() => {
+        fallbackCopy(code);
+        done();
+      });
+    } else {
+      fallbackCopy(code);
+      done();
+    }
+  }
+
+  function fallbackCopy(text) {
+    const input = document.createElement("textarea");
+    input.value = text;
+    input.style.position = "fixed";
+    input.style.opacity = "0";
+    document.body.appendChild(input);
+    input.select();
+    try { document.execCommand("copy"); } catch (error) { /* best effort */ }
+    input.remove();
+  }
+
   function closeCouponPopup() {
     elements.couponPopup.setAttribute("aria-hidden", "true");
     elements.couponPopup.classList.remove("show");
@@ -1122,6 +1197,7 @@
       items,
       coupon: activeCoupon ? { code: activeCoupon.code, label: activeCoupon.label } : null,
       discount: activeCoupon ? Math.min(activeCoupon.type === "percent" ? Math.round(cartTotal0() * activeCoupon.value / 100) : activeCoupon.value, cartTotal0()) : 0,
+      deliveryFee: deliveryFee(Math.max(0, cartTotal0() - (activeCoupon ? Math.min(activeCoupon.type === "percent" ? Math.round(cartTotal0() * activeCoupon.value / 100) : activeCoupon.value, cartTotal0()) : 0))),
       total: cartTotal()
     };
 
