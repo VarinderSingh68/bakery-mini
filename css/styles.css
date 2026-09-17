@@ -1,6 +1,10 @@
 :root {
-  /* Sweet Bakery brand system: strawberry CTAs, tangerine categories,
-     lemon badges, fresh-green accents, vanilla-cream base, cocoa text. */
+  /* Green & White forest theme (reference match): deep green CTAs, white
+     cards, soft green accents, fresh-air background, green-charcoal text. */
+  --forest: #2e7d3a;
+  --forest-dark: #256b31;
+  --forest-bright: #46a05a;
+  --green-tint: #e9f5ec;
   --strawberry: #e94b5f;
   --strawberry-dark: #d63a4e;
   --orange: #f58b32;
@@ -8,24 +12,24 @@
   --yellow: #f7c948;
   --green: #72b84a;
   --green-dark: #4f9130;
-  --cream-bg: #fff7e6;
-  --ink: #4a2a20;
-  --ink-soft: #6b4536;
-  --muted: #8f6a56;
-  --line: rgba(74, 42, 32, 0.13);
-  --line-strong: rgba(74, 42, 32, 0.22);
-  --cream: #fff7e6;
-  --paper: #fffdf7;
+  --cream-bg: #f7fbf8;
+  --ink: #1f3527;
+  --ink-soft: #3f5a49;
+  --muted: #6d8577;
+  --line: rgba(31, 53, 39, 0.13);
+  --line-strong: rgba(31, 53, 39, 0.22);
+  --cream: #f7fbf8;
+  --paper: #ffffff;
   --rose: #e94b5f;
   --rose-dark: #d63a4e;
-  --teal: #72b84a;
-  --gold: #f7c948;
-  --gold-bright: #ffdf7e;
-  --gold-deep: #d9731f;
-  --gold-wash: linear-gradient(120deg, #ffdf7e, #fff3c4 45%, #f7c948);
-  --shadow: 0 30px 70px -28px rgba(74, 42, 32, 0.22), 0 8px 24px -12px rgba(74, 42, 32, 0.1);
-  --soft-shadow: 0 16px 40px -20px rgba(74, 42, 32, 0.18), 0 3px 10px -4px rgba(74, 42, 32, 0.06);
-  --lift-shadow: 0 34px 64px -26px rgba(74, 42, 32, 0.26), 0 10px 24px -12px rgba(247, 201, 72, 0.28);
+  --teal: #2e7d3a;
+  --gold: #3c9450;
+  --gold-bright: #7cc08d;
+  --gold-deep: #2e7d3a;
+  --gold-wash: linear-gradient(120deg, #7cc08d, #d9f0de 45%, #3c9450);
+  --shadow: 0 30px 70px -28px rgba(31, 53, 39, 0.22), 0 8px 24px -12px rgba(31, 53, 39, 0.1);
+  --soft-shadow: 0 16px 40px -20px rgba(31, 53, 39, 0.16), 0 3px 10px -4px rgba(31, 53, 39, 0.06);
+  --lift-shadow: 0 34px 64px -26px rgba(31, 53, 39, 0.24), 0 10px 24px -12px rgba(70, 160, 90, 0.3);
   --radius: 14px;
   --radius-lg: 22px;
   --ease-lux: cubic-bezier(0.22, 1, 0.36, 1);
@@ -43,7 +47,7 @@ html {
 
 /* Vanilla-cream base across the whole page. */
 html {
-  background: linear-gradient(180deg, #fff7e6, #fffdf4 60%, #fff7e6);
+  background: linear-gradient(180deg, #fbfdfb, #f1f8f3 60%, #e9f4ec);
   background-attachment: fixed;
 }
 
@@ -100,7 +104,7 @@ img {
   gap: 18px;
   padding: 16px clamp(16px, 4vw, 54px);
   border-bottom: 1px solid var(--line);
-  background: rgba(255, 247, 230, 0.92);
+  background: rgba(255, 255, 255, 0.92);
   backdrop-filter: blur(18px);
 }
 
@@ -145,7 +149,7 @@ img {
   color: #fff8ec;
   font-family: var(--font-display);
   font-weight: 600;
-  background: linear-gradient(135deg, #e94b5f, #f0654a 55%, #f58b32);
+  background: linear-gradient(135deg, #2e7d3a, #39934c 55%, #46a05a);
   box-shadow: inset 0 1px 0 rgba(255, 235, 200, 0.4), var(--soft-shadow);
 }
 
@@ -169,9 +173,9 @@ img {
 
 .cart-button,
 .primary-button {
-  color: #fffdf7;
-  background: linear-gradient(135deg, #e94b5f, #ef5560 60%, #f06a52);
-  box-shadow: 0 14px 30px -12px rgba(233, 75, 95, 0.55);
+  color: #ffffff;
+  background: linear-gradient(135deg, #2e7d3a, #379049 60%, #43a057);
+  box-shadow: 0 14px 30px -12px rgba(46, 125, 58, 0.55);
 }
 
 .primary-button::after {
@@ -197,8 +201,8 @@ img {
 
 .primary-button:hover,
 .cart-button:hover {
-  background: linear-gradient(135deg, #d63a4e, #e94b5f 60%, #f58b32);
-  box-shadow: 0 18px 38px -14px rgba(233, 75, 95, 0.5), 0 0 0 1px rgba(247, 201, 72, 0.45);
+  background: linear-gradient(135deg, #256b31, #2e7d3a 60%, #3c9450);
+  box-shadow: 0 18px 38px -14px rgba(46, 125, 58, 0.5), 0 0 0 1px rgba(124, 192, 141, 0.45);
 }
 
 .cart-button:hover,
@@ -215,8 +219,8 @@ img {
   height: 26px;
   place-items: center;
   border-radius: 999px;
-  color: #4a2a20;
-  background: var(--gold-wash);
+  color: #ffffff;
+  background: linear-gradient(135deg, #2e7d3a, #3c9450);
   font-size: 0.82rem;
   font-weight: 800;
 }
@@ -233,7 +237,7 @@ img {
 }
 
 .ghost-button:hover {
-  border-color: rgba(247, 201, 72, 0.55);
+  border-color: rgba(60, 148, 80, 0.55);
   background: linear-gradient(120deg, rgba(240, 220, 174, 0.28), rgba(255, 253, 249, 0.9));
   color: var(--ink);
 }
@@ -321,9 +325,9 @@ main {
   border: 1px solid rgba(255, 255, 255, 0.75);
   border-radius: var(--radius-lg);
   background:
-    radial-gradient(640px 300px at 88% 8%, rgba(255, 223, 126, 0.2), transparent 65%),
+    radial-gradient(640px 300px at 88% 8%, rgba(124, 192, 141, 0.2), transparent 65%),
     linear-gradient(118deg, rgba(255, 250, 240, 0.97), rgba(252, 240, 229, 0.94) 58%, rgba(250, 235, 228, 0.95)),
-    #fff7e6;
+    #f7fbf8;
   box-shadow: var(--shadow);
   overflow: hidden;
 }
@@ -332,7 +336,7 @@ main {
   content: "";
   position: absolute;
   inset: 10px;
-  border: 1px solid rgba(247, 201, 72, 0.22);
+  border: 1px solid rgba(60, 148, 80, 0.22);
   border-radius: calc(var(--radius-lg) - 8px);
   pointer-events: none;
 }
@@ -433,7 +437,7 @@ main {
   border: 0;
   border-radius: 999px;
   background: rgba(196, 130, 149, 0.0);
-  background: rgba(233, 75, 95, 0.35);
+  background: rgba(46, 125, 58, 0.35);
   transition: width 180ms ease, background 180ms ease;
 }
 
@@ -446,7 +450,7 @@ main {
   width: min(1180px, calc(100% - 32px));
   margin: 18px auto 0;
   overflow: hidden;
-  border: 1px solid rgba(247, 201, 72, 0.3);
+  border: 1px solid rgba(60, 148, 80, 0.3);
   border-radius: 999px;
   color: var(--gold-deep);
   background: linear-gradient(100deg, rgba(255, 252, 244, 0.95), rgba(250, 240, 219, 0.96), rgba(255, 248, 234, 0.95));
@@ -560,18 +564,18 @@ main {
 
 .kg-filter-pill:hover {
   color: var(--gold-deep);
-  background: rgba(245, 139, 50, 0.09);
+  background: rgba(46, 125, 58, 0.09);
   }
 
 .kg-filter-pill.active {
-  color: #fffdf7;
-  background: linear-gradient(135deg, #f58b32, #ef7c2a 60%, #e94b5f);
-  box-shadow: 0 8px 18px -8px rgba(245, 139, 50, 0.55);
+  color: #ffffff;
+  background: linear-gradient(135deg, #2e7d3a, #3c9450);
+  box-shadow: 0 8px 18px -8px rgba(46, 125, 58, 0.55);
 }
 
 .kg-filter-pill:focus-visible {
   outline: none;
-  box-shadow: inset 0 0 0 2px rgba(245, 139, 50, 0.5);
+  box-shadow: inset 0 0 0 2px rgba(46, 125, 58, 0.5);
 }
 
 .catalog-search {
@@ -647,14 +651,14 @@ main {
   padding: 12px;
   border: 1px solid rgba(255, 255, 255, 0.85);
   border-radius: var(--radius);
-  background: linear-gradient(135deg, #fffdf7, #fdf4e7 60%, #f8ecdc);
+  background: linear-gradient(135deg, #ffffff, #fdf4e7 60%, #f8ecdc);
   cursor: pointer;
   transition: transform 260ms var(--ease-lux), box-shadow 260ms var(--ease-lux), border-color 260ms var(--ease-lux);
 }
 
 .special-card:hover,
 .special-card:focus-visible {
-  border-color: rgba(247, 201, 72, 0.55);
+  border-color: rgba(60, 148, 80, 0.55);
   box-shadow: var(--lift-shadow);
   transform: translateY(-3px);
   outline: none;
@@ -725,12 +729,12 @@ main {
 }
 
 .category-block:hover {
-  border-color: rgba(247, 201, 72, 0.45);
+  border-color: rgba(60, 148, 80, 0.45);
 }
 
 .category-block.open {
-  border-color: rgba(247, 201, 72, 0.55);
-  box-shadow: 0 20px 44px -26px rgba(74, 42, 32, 0.4), 0 6px 18px -10px rgba(245, 139, 50, 0.18);
+  border-color: rgba(60, 148, 80, 0.55);
+  box-shadow: 0 20px 44px -26px rgba(74, 42, 32, 0.4), 0 6px 18px -10px rgba(46, 125, 58, 0.18);
 }
 
 .category-head {
@@ -751,7 +755,7 @@ main {
   height: 44px;
   object-fit: cover;
   border-radius: 12px;
-  border: 1px solid rgba(247, 201, 72, 0.35);
+  border: 1px solid rgba(60, 148, 80, 0.35);
   box-shadow: 0 4px 10px -4px rgba(74, 42, 32, 0.35);
   background: var(--cream);
 }
@@ -789,9 +793,9 @@ main {
   font-weight: 800;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: #7a4d00;
-  background: linear-gradient(135deg, #ffdf7e, #f7c948);
-  border: 1px solid rgba(201, 143, 31, 0.35);
+  color: #256b31;
+  background: linear-gradient(135deg, #d9f0de, #bfe4c9);
+  border: 1px solid rgba(46, 125, 58, 0.3);
   border-radius: 999px;
   padding: 3px 9px;
   white-space: nowrap;
@@ -857,7 +861,7 @@ main {
 
 .product-card:hover {
   transform: translateY(-6px);
-  border-color: rgba(247, 201, 72, 0.5);
+  border-color: rgba(60, 148, 80, 0.5);
   box-shadow: var(--lift-shadow);
 }
 
@@ -917,7 +921,7 @@ main {
   border-radius: var(--radius);
   padding: 9px 10px;
   color: var(--ink);
-  background: #fffaef;
+  background: #fbfdfb;
   text-align: left;
 }
 
@@ -931,9 +935,9 @@ main {
 }
 
 .kg-option.active {
-  border-color: rgba(245, 139, 50, 0.75);
-  background: linear-gradient(135deg, #fff3cf, #ffedbd);
-  box-shadow: inset 0 0 0 1px rgba(247, 201, 72, 0.25), 0 4px 12px -6px rgba(245, 139, 50, 0.4);
+  border-color: rgba(46, 125, 58, 0.75);
+  background: linear-gradient(135deg, #e9f5ec, #dff0e4);
+  box-shadow: inset 0 0 0 1px rgba(60, 148, 80, 0.25), 0 4px 12px -6px rgba(46, 125, 58, 0.4);
 }
 
 .product-action {
@@ -956,10 +960,10 @@ main {
 .qty-stepper {
   display: inline-flex;
   align-items: stretch;
-  border: 1.5px solid rgba(245, 139, 50, 0.55);
+  border: 1.5px solid rgba(46, 125, 58, 0.55);
   border-radius: 999px;
-  background: linear-gradient(135deg, #fff3cf, #ffedbd);
-  box-shadow: inset 0 0 0 1px rgba(247, 201, 72, 0.18), 0 10px 22px -12px rgba(245, 139, 50, 0.45);
+  background: linear-gradient(135deg, #e9f5ec, #dff0e4);
+  box-shadow: inset 0 0 0 1px rgba(60, 148, 80, 0.18), 0 10px 22px -12px rgba(46, 125, 58, 0.45);
   overflow: hidden;
 }
 
@@ -979,14 +983,14 @@ main {
 }
 
 .qty-stepper button:hover {
-  background: rgba(245, 139, 50, 0.14);
+  background: rgba(46, 125, 58, 0.14);
   color: #9a7227;
 }
 
 .qty-stepper button:focus-visible {
   outline: none;
-  background: rgba(245, 139, 50, 0.14);
-  box-shadow: inset 0 0 0 2px rgba(245, 139, 50, 0.5);
+  background: rgba(46, 125, 58, 0.14);
+  box-shadow: inset 0 0 0 2px rgba(46, 125, 58, 0.5);
 }
 
 .qty-stepper span {
@@ -1050,11 +1054,11 @@ main {
   content: "";
   flex: 1;
   height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(247, 201, 72, 0.45));
+  background: linear-gradient(90deg, transparent, rgba(60, 148, 80, 0.45));
 }
 
 .luxe-divider::after {
-  background: linear-gradient(90deg, rgba(247, 201, 72, 0.45), transparent);
+  background: linear-gradient(90deg, rgba(60, 148, 80, 0.45), transparent);
 }
 
 .luxe-divider span {
@@ -1080,7 +1084,7 @@ main {
   justify-content: space-between;
   gap: 12px;
   padding: 30px 0 38px;
-  border-top: 1px solid rgba(247, 201, 72, 0.28);
+  border-top: 1px solid rgba(60, 148, 80, 0.28);
   color: var(--muted);
 }
 
@@ -1130,7 +1134,7 @@ main {
   padding: 18px;
   border: 1px solid rgba(255, 255, 255, 0.9);
   border-radius: var(--radius-lg);
-  background: linear-gradient(135deg, #fffdf7, #fbf2e3 58%, #f6e8d4);
+  background: linear-gradient(135deg, #ffffff, #fbf2e3 58%, #f6e8d4);
   box-shadow: 0 24px 80px rgba(74, 42, 32, 0.26);
   overflow-y: auto;
   transform: translateY(18px) scale(0.98);
@@ -1210,7 +1214,7 @@ main {
   width: min(560px, 100%);
   height: 100%;
   padding: 22px;
-  background: linear-gradient(180deg, #fffdf7, #faf1e2);
+  background: linear-gradient(180deg, #ffffff, #faf1e2);
   box-shadow: -22px 0 56px rgba(74, 42, 32, 0.24);
   transform: translateX(100%);
   transition: transform 380ms var(--ease-lux);
@@ -1274,7 +1278,7 @@ main {
   border: 1px solid var(--line);
   border-radius: var(--radius);
   color: var(--ink);
-  background: #fff7e6;
+  background: #f7fbf8;
   font-weight: 800;
 }
 
@@ -1420,8 +1424,8 @@ textarea {
 
 input:focus,
 textarea:focus {
-  border-color: rgba(245, 139, 50, 0.72);
-  box-shadow: 0 0 0 3px rgba(247, 201, 72, 0.16);
+  border-color: rgba(46, 125, 58, 0.72);
+  box-shadow: 0 0 0 3px rgba(60, 148, 80, 0.16);
 }
 
 .payment-box {
@@ -2108,10 +2112,10 @@ body[data-page="admin"] {
   .product-action .primary-button {
     width: 132px;
     min-height: 54px;
-    border: 2px solid rgba(233, 75, 95, 0.6);
+    border: 2px solid rgba(46, 125, 58, 0.6);
     border-radius: 16px;
-    color: var(--strawberry);
-    background: #fffbe9;
+    color: var(--gold-deep);
+    background: #f3faf5;
     box-shadow: none;
     font-size: 0;
   }
@@ -2130,7 +2134,7 @@ body[data-page="admin"] {
   }
 
   .qty-stepper {
-    background: #fffbe9;
+    background: #f3faf5;
     box-shadow: 0 6px 18px -10px rgba(74, 42, 32, 0.35);
   }
 
