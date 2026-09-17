@@ -2158,6 +2158,25 @@ body[data-page="admin"] {
     transition-duration: 0.01ms !important;
   }
 
+  /* The announcement tickers are essential store info and must always glide:
+     restore them AFTER the global kill-switch so the contact ribbon,
+     celebration picks, and offers slider keep moving even when the phone
+     has "remove animations" enabled. */
+  .contact-ribbon-track {
+    animation-duration: 42s !important;
+    animation-iteration-count: infinite !important;
+  }
+
+  .special-track {
+    animation-duration: 34s !important;
+    animation-iteration-count: infinite !important;
+  }
+
+  .offers-ribbon-track {
+    animation-duration: 30s !important;
+    animation-iteration-count: infinite !important;
+  }
+
   .product-card,
   .reveal {
     transform: none;
