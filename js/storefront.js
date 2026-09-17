@@ -384,7 +384,7 @@
       bit.style.setProperty("--dx", `${Math.round(Math.cos(angle) * dist)}px`);
       bit.style.setProperty("--dy", `${Math.round(Math.sin(angle) * dist - 70)}px`);
       bit.style.setProperty("--rot", `${Math.round(Math.random() * 720 - 360)}deg`);
-      bit.style.setProperty("--fall", `${Math.round(160 + Math.random() * 240)}px`);
+      bit.style.setProperty("--fall", `${Math.round(window.innerHeight * 0.55 + Math.random() * window.innerHeight * 0.25)}px`);
       bit.style.background = colors[i % colors.length];
       if (i % 3 === 0) {
         bit.style.borderRadius = "50%";
