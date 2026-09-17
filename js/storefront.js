@@ -52,6 +52,73 @@
     catalogCount: document.getElementById("catalogCount")
   };
 
+  // Sliding ribbons (contact ticker + celebration picks) can freeze on some
+  // phones (battery saver, stale touch-hover states). This watchdog samples
+  // each track's position: if it stops moving it restarts the CSS animation,
+  // and if it keeps freezing it drives the slide manually so the tracks
+  // always glide the moment the page opens.
+  function startMarqueeWatchers() {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      return;
+    }
+
+    const readX = (el) => {
+      const m = getComputedStyle(el).transform;
+      if (!m || m === "none") return 0;
+      try {
+        return new DOMMatrixReadOnly(m).e;
+      } catch (error) {
+        return Number.parseFloat(m.split(",")[4]) || 0;
+      }
+    };
+
+    [
+      { el: document.querySelector(".contact-ribbon-track"), seconds: 42 },
+      { el: elements.specialTrack, seconds: 34 }
+    ]
+      .filter((track) => track.el)
+      .forEach(({ el, seconds }) => {
+        let lastX = null;
+        let lastChange = performance.now();
+        let stuckCount = 0;
+        let manual = false;
+        let offset = 0;
+        let lastTick = 0;
+
+        const tick = (now) => {
+          if (!document.hidden) {
+            if (!manual) {
+              const x = readX(el);
+              if (x !== lastX) {
+                lastX = x;
+                lastChange = now;
+              } else if (now - lastChange > 1600) {
+                el.style.animation = "none";
+                void el.offsetWidth; // force reflow so the animation restarts
+                el.style.animation = "";
+                lastChange = now;
+                stuckCount += 1;
+                if (stuckCount >= 3) {
+                  manual = true; // CSS keeps dying - take over in JS
+                }
+              }
+            }
+            if (manual) {
+              const dt = lastTick ? (now - lastTick) / 1000 : 0;
+              const width = el.scrollWidth / 2 || 1;
+              offset = (offset + (dt / seconds) * width) % width;
+              el.style.animation = "none";
+              el.style.transform = `translateX(${-offset}px)`;
+            }
+          }
+          lastTick = now;
+          requestAnimationFrame(tick);
+        };
+
+        requestAnimationFrame(tick);
+      });
+  }
+
   function init() {
     pullCloudThenRender();
     renderBrand();
@@ -62,6 +129,7 @@
     renderAddOns();
     bindEvents();
     startCatalogRefresh();
+    startMarqueeWatchers();
   }
 
   function activeProducts() {
