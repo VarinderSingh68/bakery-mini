@@ -372,7 +372,7 @@
     }
 
     const rect = originEl.getBoundingClientRect();
-    const colors = ["#c19a4b", "#d9b672", "#a37c31", "#b3495c", "#3a241a", "#f0dcae"];
+    const colors = ["#d4a959", "#eccf95", "#f7a8bf", "#e56a8a", "#8a5540", "#fbeecb"];
     const burst = document.createElement("div");
     burst.className = "confetti-burst";
     burst.setAttribute("aria-hidden", "true");

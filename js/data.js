@@ -610,6 +610,8 @@
         "White Forest",
         "Strawberry",
         "Rasmalai",
+        "Red Velvet",
+        "Cheese Cake",
         "Savouries",
         "Add-ons",
         "Customized Cakes"
@@ -753,6 +755,8 @@
     "White Forest",
     "Strawberry",
     "Rasmalai",
+    "Red Velvet",
+    "Cheese Cake",
     "Savouries",
     "Add-ons",
     "Customized Cakes"
@@ -790,6 +794,8 @@
     if (!text) { return null; }
     if (text.includes("black forest")) { return "Black Forest"; }
     if (text.includes("white forest")) { return "White Forest"; }
+    if (text.includes("cheese cake") || text.includes("cheesecake")) { return "Cheese Cake"; }
+    if (text.includes("red velvet")) { return "Red Velvet"; }
     if (text.includes("strawberry")) { return "Strawberry"; }
     if (text.includes("rasmalai") || text.includes("ras malai")) { return "Rasmalai"; }
     if (text.includes("pineapple")) { return "Pineapple"; }
@@ -809,11 +815,13 @@
   function applyFlavorOrganization(products) {
     // Idempotent filing: a cake whose name names a flavor joins that
     // flavor's category; everything else keeps the owner's category.
-    // Add-on and savoury menu items are exempt (Blueberry Tub Cake belongs
-    // to Add-ons; Kitkat Brownie stays in Savouries).
+    // Add-on, savoury, bento, and cheese menu items are exempt from
+    // name-based filing - their categories are set explicitly at injection
+    // (Blueberry Tub Cake stays in Add-ons; Blueberry Bento in Blueberry;
+    // Blueberry Cheese Cake Slice in Cheese Cake).
     products.forEach((product) => {
       const id = String(product.id || "");
-      if (id.startsWith("addonmenu-") || id.startsWith("savourymenu-")) {
+      if (id.includes("menu-")) {
         return;
       }
       const flavor = flavorCategoryForName(product.name);
@@ -912,6 +920,54 @@
     { id: "savourymenu-flacks-crunch-cookies", name: "Flacks Crunch Cookies", group: "Cookies", description: "Crunchy cornflake cookies with a caramel snap.", variants: [{ kg: "250g", price: 250 }] }
   ];
 
+  // The owner's printed BENTO + CHEESE CAKE menus (WhatsApp image).
+  // Bento cakes are 250g only; each files into its flavor dropdown.
+  // Cheese cake slices carry 500g / 1Kg variants in the Cheese Cake dropdown.
+  const BENTO_MENU_ITEMS = [
+    { id: "bentomenu-pineapple", name: "Pineapple Bento Cake", category: "Pineapple", description: "Little 250g pineapple bento cake for one or two.", variants: [{ kg: "250g", price: 299 }] },
+    { id: "bentomenu-strawberry", name: "Strawberry Bento", category: "Strawberry", description: "Little 250g strawberry bento cake, soft and fruity.", variants: [{ kg: "250g", price: 299 }] },
+    { id: "bentomenu-raspberry", name: "Raspberry Bento", category: "Raspberry", description: "Little 250g raspberry bento cake with a tangy swirl.", variants: [{ kg: "250g", price: 299 }] },
+    { id: "bentomenu-blueberry", name: "Blueberry Bento", category: "Blueberry", description: "Little 250g blueberry bento cake with berry topping.", variants: [{ kg: "250g", price: 299 }] },
+    { id: "bentomenu-biscoff", name: "Biscoff Bento", category: "Biscoff", description: "Little 250g bento cake swirled with Biscoff.", variants: [{ kg: "250g", price: 349 }] },
+    { id: "bentomenu-chocolate", name: "Chocolate Bento", category: "Chocolate", description: "Little 250g chocolate bento cake, rich and soft.", variants: [{ kg: "250g", price: 299 }] },
+    { id: "bentomenu-red-velvet", name: "Red Velvet Bento", category: "Red Velvet", description: "Little 250g red velvet bento cake with cream cheese frosting.", variants: [{ kg: "250g", price: 299 }] }
+  ];
+
+  const CHEESE_MENU_ITEMS = [
+    { id: "cheesemenu-newyork-slice", name: "New York Cheese Cake Slice", description: "Classic dense New York cheesecake on a biscuit base.", variants: [{ kg: "500g", price: 899 }, { kg: "1Kg", price: 1799 }] },
+    { id: "cheesemenu-biscoff-slice", name: "Biscoff Cheese Cake Slice", description: "Cheesecake crowned with Biscoff spread and crumble.", variants: [{ kg: "500g", price: 950 }, { kg: "1Kg", price: 1899 }] },
+    { id: "cheesemenu-blueberry-slice", name: "Blueberry Cheese Cake Slice", description: "Cheesecake with a blueberry compote swirl.", variants: [{ kg: "500g", price: 950 }, { kg: "1Kg", price: 1899 }] },
+    { id: "cheesemenu-nutella-slice", name: "Nutella Cheese Cake Slice", description: "Cheesecake with a glossy Nutella topping.", variants: [{ kg: "500g", price: 950 }, { kg: "1Kg", price: 1899 }] },
+    { id: "cheesemenu-strawberry-slice", name: "Strawberry Cheese Cake Slice", description: "Cheesecake with fresh strawberry glaze.", variants: [{ kg: "500g", price: 950 }, { kg: "1Kg", price: 1899 }] }
+  ];
+
+  function injectBentoCheeseMenus(products, settings) {
+    if (settings && settings.bentoCheeseMenuV1) {
+      return false;
+    }
+    const existing = new Set(products.map((product) => product.id));
+    let added = false;
+    const push = (item) => {
+      if (existing.has(item.id)) {
+        return;
+      }
+      products.push({
+        id: item.id,
+        name: item.name,
+        category: item.category || "Cheese Cake",
+        description: item.description,
+        details: item.category ? "Bento Cake" : "Cheese Cake",
+        image: "",
+        active: true,
+        variants: item.variants
+      });
+      added = true;
+    };
+    BENTO_MENU_ITEMS.forEach(push);
+    CHEESE_MENU_ITEMS.forEach(push);
+    return added;
+  }
+
   function injectSavouryMenu(products, settings) {
     if (settings && settings.savouryMenuV1) {
       return false;
@@ -964,6 +1020,7 @@
     const migratedCategories = mergeFlavorCategories(data.categories, defaults.categories);
     const addonMenuAdded = injectAddonMenu(products, settings);
     const savouryMenuAdded = injectSavouryMenu(products, settings);
+    const bentoCheeseMenuAdded = injectBentoCheeseMenus(products, settings);
     applyFlavorOrganization(products);
     stampExpressDelivery(products);
     const specialSource = Array.isArray(data.specials) ? data.specials : defaults.specials;
@@ -978,6 +1035,7 @@
         ...settings,
         addonMenuV1: Boolean(settings.addonMenuV1) || addonMenuAdded,
         savouryMenuV1: Boolean(settings.savouryMenuV1) || savouryMenuAdded,
+        bentoCheeseMenuV1: Boolean(settings.bentoCheeseMenuV1) || bentoCheeseMenuAdded,
         bakeryName:
           settings.bakeryName === ["Sweet", "Layer", "Bakery"].join(" ")
             ? defaults.settings.bakeryName
