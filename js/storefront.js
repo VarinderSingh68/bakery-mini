@@ -13,6 +13,12 @@
   let productSearchTerm = "";
   let categoriesInitialized = false;
   const openCategories = new Set();
+  let activeCoupon = null;
+  const COUPONS = [
+    { code: "SWEET10", type: "percent", value: 10, label: "10% OFF", min: 0 },
+    { code: "CAKE50", type: "flat", value: 50, label: "Rs. 50 OFF", min: 400 },
+    { code: "PARTY100", type: "flat", value: 100, label: "Rs. 100 OFF", min: 800 }
+  ];
 
   const elements = {
     productGrid: document.getElementById("productGrid"),
@@ -46,6 +52,17 @@
     addonList: document.getElementById("addonList"),
     checkoutMessage: document.getElementById("checkoutMessage"),
     placeOrder: document.getElementById("placeOrder"),
+    couponBox: document.getElementById("couponBox"),
+    couponInput: document.getElementById("couponInput"),
+    couponApply: document.getElementById("couponApply"),
+    couponNote: document.getElementById("couponNote"),
+    couponPopup: document.getElementById("couponPopup"),
+    couponPopupClose: document.getElementById("couponPopupClose"),
+    couponUse: document.getElementById("couponUse"),
+    couponPopupCode: document.getElementById("couponPopupCode"),
+    couponPopupSave: document.getElementById("couponPopupSave"),
+    callNowFab: document.getElementById("callNowFab"),
+    offersTrack: document.getElementById("offersTrack"),
     footerContact: document.getElementById("footerContact"),
     productSearch: document.getElementById("productSearch"),
     kgFilter: document.getElementById("kgFilter"),
@@ -74,7 +91,8 @@
 
     [
       { el: document.querySelector(".contact-ribbon-track"), seconds: 42 },
-      { el: elements.specialTrack, seconds: 34 }
+      { el: elements.specialTrack, seconds: 34 },
+      { el: elements.offersTrack, seconds: 30 }
     ]
       .filter((track) => track.el)
       .forEach(({ el, seconds }) => {
@@ -499,6 +517,22 @@
     elements.cartItems.addEventListener("click", handleCartClick);
     elements.checkoutForm.addEventListener("submit", placeOrder);
     elements.addonList.addEventListener("click", handleAddonClick);
+    elements.couponApply.addEventListener("click", () => applyCoupon(elements.couponInput.value));
+    elements.couponInput.addEventListener("keydown", (event) => {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        applyCoupon(elements.couponInput.value);
+      }
+    });
+    elements.couponPopupClose.addEventListener("click", closeCouponPopup);
+    elements.couponUse.addEventListener("click", () => {
+      applyCoupon(elements.couponPopupCode.textContent);
+      closeCouponPopup();
+      openCart();
+    });
+    elements.couponPopup.addEventListener("click", (event) => {
+      if (event.target === elements.couponPopup) closeCouponPopup();
+    });
     elements.productSearch.addEventListener("input", (event) => {
       productSearchTerm = event.target.value.trim().toLowerCase();
       renderProducts();
@@ -862,6 +896,7 @@
     elements.cartCount.textContent = String(count);
     elements.cartTotal.textContent = dataApi.formatPrice(total);
     elements.placeOrder.disabled = cart.length === 0;
+    renderCouponRow();
 
     if (previousCount !== String(count)) {
       elements.cartCount.classList.remove("pop");
@@ -878,6 +913,9 @@
           <p>Add a cake from the menu to place your order.</p>
         </div>
       `;
+      elements.couponBox.style.display = "none";
+      const row = document.getElementById("couponAppliedRow");
+      if (row) row.remove();
       return;
     }
 
@@ -909,7 +947,18 @@
   }
 
   function cartTotal() {
-    return cart.reduce((sum, item) => sum + item.price * item.qty, 0);
+    const subtotal = cart.reduce((sum, item) => sum + item.price * item.qty, 0);
+    if (!activeCoupon) {
+      return subtotal;
+    }
+    const discount = couponDiscount(subtotal);
+    return Math.max(0, subtotal - discount);
+    function couponDiscount(amount) {
+      if (activeCoupon.type === "percent") {
+        return Math.round(amount * (activeCoupon.value / 100));
+      }
+      return activeCoupon.value;
+    }
   }
 
   function handleCartClick(event) {
@@ -937,6 +986,83 @@
 
     dataApi.saveCart(cart);
     renderCart();
+  }
+
+  function applyCoupon(rawCode) {
+    const code = (rawCode || "").trim().toUpperCase();
+    if (!code) {
+      elements.couponNote.textContent = "Enter a coupon code.";
+      return;
+    }
+    const coupon = COUPONS.find((entry) => entry.code === code);
+    if (!coupon) {
+      activeCoupon = null;
+      elements.couponNote.textContent = "That code is not valid.";
+      renderCart();
+      return;
+    }
+    const subtotal = cart.reduce((sum, item) => sum + item.price * item.qty, 0);
+    if (subtotal < coupon.min) {
+      activeCoupon = null;
+      elements.couponNote.textContent = `${coupon.code} needs a minimum order of Rs. ${coupon.min}.`;
+      renderCart();
+      return;
+    }
+    activeCoupon = coupon;
+    elements.couponInput.value = coupon.code;
+    elements.couponNote.textContent = `${coupon.code} applied — ${coupon.label}!`;
+    elements.couponNote.classList.add("success");
+    renderCart();
+  }
+
+  function clearCoupon() {
+    activeCoupon = null;
+    elements.couponInput.value = "";
+    elements.couponNote.textContent = "";
+    elements.couponNote.classList.remove("success");
+    renderCart();
+  }
+
+  function renderCouponRow() {
+    if (!activeCoupon) {
+      elements.couponBox.style.display = "";
+      const row = document.getElementById("couponAppliedRow");
+      if (row) row.remove();
+      return;
+    }
+    elements.couponBox.style.display = "none";
+    let row = document.getElementById("couponAppliedRow");
+    if (!row) {
+      row = document.createElement("div");
+      row.id = "couponAppliedRow";
+      row.className = "coupon-applied-row";
+      elements.couponBox.insertAdjacentElement("afterend", row);
+      row.addEventListener("click", (event) => {
+        if (event.target.closest("[data-coupon-remove]")) {
+          clearCoupon();
+        }
+      });
+    }
+    const subtotal = cart.reduce((sum, item) => sum + item.price * item.qty, 0);
+    const discount = Math.min(activeCoupon.type === "percent" ? Math.round(subtotal * activeCoupon.value / 100) : activeCoupon.value, subtotal);
+    row.innerHTML = `
+      <span class="coupon-chip">🎟️ ${activeCoupon.code} · ${activeCoupon.label}</span>
+      <button type="button" class="coupon-remove" data-coupon-remove>Remove</button>
+    `;
+  }
+
+  function openCouponPopup() {
+    if (elements.couponPopup.getAttribute("aria-hidden") === "false") return;
+    const featured = COUPONS[0];
+    elements.couponPopupCode.textContent = featured.code;
+    elements.couponPopupSave.textContent = featured.label;
+    elements.couponPopup.setAttribute("aria-hidden", "false");
+    elements.couponPopup.classList.add("show");
+  }
+
+  function closeCouponPopup() {
+    elements.couponPopup.setAttribute("aria-hidden", "true");
+    elements.couponPopup.classList.remove("show");
   }
 
   function openCart() {
@@ -994,8 +1120,14 @@
       paymentMethod: "Order payment",
       customer,
       items,
-      total: items.reduce((sum, item) => sum + item.lineTotal, 0)
+      coupon: activeCoupon ? { code: activeCoupon.code, label: activeCoupon.label } : null,
+      discount: activeCoupon ? Math.min(activeCoupon.type === "percent" ? Math.round(cartTotal0() * activeCoupon.value / 100) : activeCoupon.value, cartTotal0()) : 0,
+      total: cartTotal()
     };
+
+    function cartTotal0() {
+      return items.reduce((sum, item) => sum + item.lineTotal, 0);
+    }
 
     let deliveryMessage = "Order saved in this browser.";
     try {
@@ -1023,6 +1155,10 @@
     }
 
     cart = [];
+    activeCoupon = null;
+    elements.couponInput.value = "";
+    elements.couponNote.textContent = "";
+    elements.couponNote.classList.remove("success");
     dataApi.saveCart(cart);
     renderCart();
     elements.checkoutForm.reset();
@@ -1055,4 +1191,7 @@
   }
 
   init();
+
+  // Coupon teaser: appears once, 5 seconds after the site opens.
+  window.setTimeout(openCouponPopup, 5000);
 })();

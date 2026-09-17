@@ -14,7 +14,7 @@
       href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=Manrope:wght@400..800&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="css/styles.css?v=20260923n" />
+    <link rel="stylesheet" href="css/styles.css?v=20260924a" />
   </head>
   <body data-page="storefront">
     <header class="site-header">
@@ -62,6 +62,29 @@
           <span>Custom cakes for every happy table</span>
           <b>Freshly prepared for your celebration</b>
           <span aria-hidden="true">&#10022;</span>
+        </div>
+      </section>
+
+      <div class="luxe-divider" aria-hidden="true"><span>✦</span></div>
+
+      <section class="offers-ribbon" aria-label="Bakery offers">
+        <div class="offers-ribbon-track" id="offersTrack">
+          <b>🚚 Free home delivery</b>
+          <span aria-hidden="true">✦</span>
+          <b>🕓 Open 24 / 7</b>
+          <span aria-hidden="true">✦</span>
+          <b>🎂 Freshly baked to order</b>
+          <span aria-hidden="true">✦</span>
+          <b>📞 Call or WhatsApp anytime</b>
+          <span aria-hidden="true">✦</span>
+          <b>🚚 Free home delivery</b>
+          <span aria-hidden="true">✦</span>
+          <b>🕓 Open 24 / 7</b>
+          <span aria-hidden="true">✦</span>
+          <b>🎂 Freshly baked to order</b>
+          <span aria-hidden="true">✦</span>
+          <b>📞 Call or WhatsApp anytime</b>
+          <span aria-hidden="true">✦</span>
         </div>
       </section>
 
@@ -126,6 +149,12 @@
 
         <div class="cart-items" id="cartItems"></div>
 
+        <div class="coupon-box" id="couponBox">
+          <input id="couponInput" type="text" placeholder="Coupon code" autocomplete="off" />
+          <button class="coupon-apply" id="couponApply" type="button">Apply</button>
+        </div>
+        <p class="coupon-note" id="couponNote" role="status"></p>
+
         <div class="total-line">
           <span>Total</span>
           <strong id="cartTotal">Rs. 0</strong>
@@ -182,8 +211,27 @@
       <span id="footerContact">Fresh cakes prepared for every celebration.</span>
     </footer>
 
+    <a class="call-now-fab" id="callNowFab" href="tel:+919876665757" aria-label="Call now">
+      <span class="call-fab-icon" aria-hidden="true">📞</span>
+      <span class="call-fab-label">Call Now</span>
+    </a>
+
+    <div class="coupon-popup" id="couponPopup" aria-hidden="true" role="dialog" aria-modal="false" aria-labelledby="couponPopupTitle">
+      <div class="coupon-card" role="document">
+        <button class="coupon-popup-close" id="couponPopupClose" type="button" aria-label="Dismiss coupon">x</button>
+        <p class="coupon-badge">Limited offer</p>
+        <h2 id="couponPopupTitle">A sweet treat for you!</h2>
+        <p class="coupon-desc">Use this coupon at checkout and save on your celebration order.</p>
+        <div class="coupon-code-row">
+          <strong class="coupon-code" id="couponPopupCode">SWEET10</strong>
+          <span class="coupon-save" id="couponPopupSave">10% OFF</span>
+        </div>
+        <button class="primary-button full" id="couponUse" type="button">Use coupon</button>
+      </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
     <script src="js/data.js?v=20260920-sync1"></script>
-    <script src="js/storefront.js?v=20260923n"></script>
+    <script src="js/storefront.js?v=20260924a"></script>
   </body>
 </html>
