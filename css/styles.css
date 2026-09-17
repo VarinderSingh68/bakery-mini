@@ -751,12 +751,12 @@ main {
 
 .category-thumb {
   flex: 0 0 auto;
-  width: 44px;
-  height: 44px;
+  width: 72px;
+  height: 72px;
   object-fit: cover;
-  border-radius: 12px;
+  border-radius: 16px;
   border: 1px solid rgba(60, 148, 80, 0.35);
-  box-shadow: 0 4px 10px -4px rgba(74, 42, 32, 0.35);
+  box-shadow: 0 6px 14px -6px rgba(31, 53, 39, 0.3);
   background: var(--cream);
 }
 
@@ -1923,23 +1923,13 @@ body[data-page="admin"] {
   }
 
   .category-thumb {
-    width: 40px;
-    height: 40px;
+    width: 56px;
+    height: 56px;
   }
 
   .category-head {
     padding: 12px 14px;
-    gap: 10px;
-    flex-wrap: wrap;
-    row-gap: 4px;
-  }
-
-  .category-head h3 {
-    flex: 1 1 100%;
-  }
-
-  .category-head-meta {
-    flex: 1;
+    gap: 12px;
   }
 
   .category-delivery {

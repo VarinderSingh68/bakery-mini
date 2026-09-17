@@ -11,7 +11,6 @@
   let bannerTimer;
   let catalogRefreshTimer;
   let productSearchTerm = "";
-  let kgFilterValue = "all";
   let categoriesInitialized = false;
   const openCategories = new Set();
 
@@ -103,7 +102,7 @@
 
   function renderBrand() {
     const settings = data.settings;
-    document.title = `${settings.bakeryName} | Cakes`;
+    document.title = settings.bakeryName;
     document.querySelectorAll("[data-brand-name], [data-brand-heading], [data-brand-footer]").forEach((node) => {
       node.textContent = settings.bakeryName;
     });
@@ -214,9 +213,6 @@
   function renderProducts() {
     const products = activeProducts();
     const filteredProducts = products.filter((product) => {
-      if (kgFilterValue !== "all" && !hasVariantKg(product, kgFilterValue)) {
-        return false;
-      }
       if (!productSearchTerm) {
         return true;
       }
@@ -227,10 +223,10 @@
       return searchableText.includes(productSearchTerm);
     });
 
-    const filterLabel = kgFilterValue === "all" ? "" : ` in ${kgFilterValue} kg`;
-    elements.catalogCount.textContent = productSearchTerm || kgFilterValue !== "all"
-      ? `${filteredProducts.length} of ${products.length} cakes found${filterLabel}`
-      : `${products.length} cakes available`;
+    const filterLabel = "";
+    elements.catalogCount.textContent = productSearchTerm
+      ? `${filteredProducts.length} of ${products.length} items found`
+      : `${products.length} items available`;
 
     // Group the filtered cakes by their category, preserving the category
     // order managed in the admin panel.
@@ -256,7 +252,7 @@
 
     // Show every category from the admin list even when it has no cakes yet
     // (a brand-new flavor reads as "coming soon" instead of vanishing).
-    if (!productSearchTerm && kgFilterValue === "all") {
+    if (!productSearchTerm) {
       (data.categories || []).forEach((name, rank) => {
         const key = String(name).trim().toLowerCase();
         if (!groups.has(key)) {
@@ -265,11 +261,11 @@
       });
     }
 
-    const searchOrFilter = Boolean(productSearchTerm) || kgFilterValue !== "all";
+    const searchActive = Boolean(productSearchTerm);
 
     if (!categoriesInitialized) {
       categoriesInitialized = true;
-      if (!searchOrFilter && sections.length) {
+      if (!searchActive && sections.length) {
         openCategories.add(sections[0].name.toLowerCase());
       }
     }
@@ -277,8 +273,8 @@
     if (!filteredProducts.length) {
       elements.productGrid.innerHTML = `
         <div class="empty-state catalog-empty">
-          <strong>No cakes found</strong>
-          <p>Try another cake name, flavor, or category.</p>
+          <strong>No items found</strong>
+          <p>Try another item name, flavor, or category.</p>
         </div>
       `;
       return;
@@ -288,14 +284,14 @@
     elements.productGrid.innerHTML = sections
       .map((section, sectionIndex) => {
         const key = section.name.toLowerCase();
-        const isOpen = searchOrFilter ? true : openCategories.has(key);
+        const isOpen = searchActive ? true : openCategories.has(key);
         // Empty categories still get art: generate a default cake image from
         // the category name so the header never shows a broken icon.
         const thumb = dataApi.getProductImage(section.items[0] || { name: section.name });
         const isCustom = section.name.trim().toLowerCase() === "customized cakes";
         const deliveryTag = isCustom ? "" : `<span class="category-delivery">60 min delivery</span>`;
         const countLabel = section.items.length
-          ? `${section.items.length} ${section.items.length === 1 ? "cake" : "cakes"}`
+          ? `${section.items.length} ${section.items.length === 1 ? "item" : "items"}`
           : "Coming soon";
         const cards = section.items.length
           ? section.items.map((product) => productCardTemplate(product, staggerIndex++)).join("")
@@ -434,17 +430,6 @@
     elements.addonList.addEventListener("click", handleAddonClick);
     elements.productSearch.addEventListener("input", (event) => {
       productSearchTerm = event.target.value.trim().toLowerCase();
-      renderProducts();
-    });
-    elements.kgFilter.addEventListener("click", (event) => {
-      const pill = event.target.closest("button[data-kg]");
-      if (!pill) {
-        return;
-      }
-      kgFilterValue = pill.dataset.kg;
-      elements.kgFilter.querySelectorAll(".kg-filter-pill").forEach((btn) => {
-        btn.classList.toggle("active", btn === pill);
-      });
       renderProducts();
     });
     elements.heroPrevious.addEventListener("click", () => showBanner(activeBannerIndex - 1));
