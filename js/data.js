@@ -1328,6 +1328,21 @@
     return true;
   }
 
+  // "Chocolate Classics" and "Chocolate" are the same thing to the owner:
+  // fold every Classics item into the single Chocolate dropdown (runs once;
+  // flag travels with sync).
+  function mergeChocolateClassics(products, settings) {
+    if (settings && settings.chocoMergeV1) {
+      return false;
+    }
+    products.forEach((product) => {
+      if (String(product.category || "").trim().toLowerCase() === "chocolate classics") {
+        product.category = "Chocolate";
+      }
+    });
+    return true;
+  }
+
   function normalizeData(input) {
     const defaults = getDefaultData();
     const data = input && typeof input === "object" ? input : {};
@@ -1348,9 +1363,12 @@
     const migratedCategoriesRaw = mergeFlavorCategories(data.categories, defaults.categories);
     // Retired categories leave the dropdown list only on the first run of
     // this migration, so a category the owner re-creates later stays.
-    const migratedCategories = settings && settings.refileLegacyCatsV1
+    let migratedCategories = settings && settings.refileLegacyCatsV1
       ? migratedCategoriesRaw
       : migratedCategoriesRaw.filter((name) => !LEGACY_CATEGORIES_TO_DROP.includes(name));
+    if (!settings || !settings.chocoMergeV1) {
+      migratedCategories = migratedCategories.filter((name) => name.trim().toLowerCase() !== "chocolate classics");
+    }
     const addonMenuAdded = injectAddonMenu(products, settings);
     applyAddonPriceFixes(products, settings);
     const savouryMenuAdded = injectSavouryMenu(products, settings);
@@ -1360,6 +1378,7 @@
     const chocoMenuAdded = injectChocoMenu(products, settings);
     const slicesTubsAdded = injectCheeseSlicesAndTubs(products, settings);
     refileLegacyCategories(products, settings);
+    mergeChocolateClassics(products, settings);
     applySavouryPriceFixes(products, settings);
     applyFlavorOrganization(products);
     stampExpressDelivery(products);
@@ -1383,6 +1402,7 @@
         chocoMenuV1: Boolean(settings.chocoMenuV1) || chocoMenuAdded,
         slicesTubsV1: Boolean(settings.slicesTubsV1) || slicesTubsAdded,
         refileLegacyCatsV1: true, // refile + dropdown removal apply on first load with this version
+        chocoMergeV1: true, // Chocolate Classics folds into Chocolate on first load with this version
         savouryPriceV2: true, // price fixes apply once on first load with this version
         bakeryName:
           settings.bakeryName === ["Sweet", "Layer", "Bakery"].join(" ")
