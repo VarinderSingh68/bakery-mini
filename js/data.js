@@ -848,9 +848,9 @@
     { id: "addonmenu-spark-candle", name: "Spark Candle", price: 40, unit: "1 pc", group: "Candles", description: "Slim sparkling candle for the cake moment." },
     { id: "addonmenu-magic-candle", name: "Magic Candle", price: 70, unit: "1 pc", group: "Candles", description: "Relighting magic candle that surprises everyone." },
     { id: "addonmenu-spiral-candle", name: "Spiral Candle", price: 80, unit: "1 pc", group: "Candles", description: "Colorful spiral candle with a steady flame." },
-    { id: "addonmenu-rainbow-candle", name: "Rainbow Candle", price: 60, unit: "1 pc", group: "Candles", description: "Rainbow-striped candle for happy birthdays." },
-    { id: "addonmenu-candle-box", name: "Candle Box", price: 10, unit: "1 pc", group: "Candles", description: "Simple box to carry your candles safely." },
-    { id: "addonmenu-number-candle", name: "Number Candle", price: 50, unit: "1 pc", group: "Candles", description: "Gold number candle - tell us the age at checkout." },
+    { id: "addonmenu-rainbow-candle", name: "Rainbow Candle", price: 80, unit: "1 pc", group: "Candles", description: "Rainbow-striped candle for happy birthdays." },
+    { id: "addonmenu-candle-box", name: "Candle Box", price: 20, unit: "1 pc", group: "Candles", description: "Simple box to carry your candles safely." },
+    { id: "addonmenu-number-candle", name: "Number Candle", price: 60, unit: "1 pc", group: "Candles", description: "Gold number candle - tell us the age at checkout." },
     { id: "addonmenu-letter-candle", name: "Happy Birthday Letter Candle", price: 130, unit: "1 set", group: "Candles", description: "Full Happy Birthday letter candle set." },
     { id: "addonmenu-balloon-candle", name: "Balloon Candle", price: 99, unit: "1 pc", group: "Candles", description: "Balloon-shaped candle in festive colors." },
     { id: "addonmenu-star-candle", name: "Star Candle", price: 99, unit: "1 pc", group: "Candles", description: "Star-topped candle for little dreamers." },
@@ -866,7 +866,7 @@
     { id: "addonmenu-anniv-pack", name: "Happy Anniversary Pack", price: 300, unit: "1 pack", group: "Party Decoration", description: "Complete anniversary decoration combo pack." },
     { id: "addonmenu-hbd-foil-pack", name: "Happy Birthday Foil Pack", price: 300, unit: "1 pack", group: "Party Decoration", description: "Premium foil birthday decoration pack." },
     { id: "addonmenu-anniv-foil-pack", name: "Happy Anniversary Foil Pack", price: 350, unit: "1 pack", group: "Party Decoration", description: "Premium foil anniversary decoration pack." },
-    { id: "addonmenu-acrylic-topper-small", name: "Acrylic Cake Topper Small", price: 20, unit: "1 pc", group: "Cake Topper", description: "Small acrylic topper for the cake centre." },
+    { id: "addonmenu-acrylic-topper-small", name: "Acrylic Cake Topper Small", price: 30, unit: "1 pc", group: "Cake Topper", description: "Small acrylic topper for the cake centre." },
     { id: "addonmenu-acrylic-topper-large", name: "Acrylic Cake Topper Large", price: 50, unit: "1 pc", group: "Cake Topper", description: "Large acrylic topper that steals the show." },
     { id: "addonmenu-paper-topper", name: "Paper Topper", price: 60, unit: "1 pc", group: "Cake Topper", description: "Printed paper topper for quick styling." },
     { id: "addonmenu-blueberry-tub", name: "Blueberry Tub Cake", price: 110, unit: "1 tub", group: "Cake Topper", description: "Single-serve blueberry tub cake." },
@@ -907,6 +907,36 @@
       });
     });
     return cleaned;
+  }
+
+  // Printed ADD-ON price corrections from the owner's updated menu:
+  // Rainbow Candle Rs. 80, Candle Box Rs. 20, Number Candle Rs. 60,
+  // Acrylic Topper Small Rs. 30. Runs once (flag travels with sync);
+  // admin price edits afterwards always win.
+  const ADDON_PRICE_FIXES_V2 = {
+    "addonmenu-rainbow-candle": { "1 pc": 80 },
+    "addonmenu-candle-box": { "1 pc": 20 },
+    "addonmenu-number-candle": { "1 pc": 60 },
+    "addonmenu-acrylic-topper-small": { "1 pc": 30 }
+  };
+
+  function applyAddonPriceFixes(products, settings) {
+    if (settings && settings.addonPriceV2) {
+      return false;
+    }
+    products.forEach((product) => {
+      const fixes = ADDON_PRICE_FIXES_V2[product.id];
+      if (!fixes || !Array.isArray(product.variants)) {
+        return;
+      }
+      product.variants.forEach((variant) => {
+        const price = fixes[variant.kg];
+        if (price !== undefined) {
+          variant.price = price;
+        }
+      });
+    });
+    return true;
   }
 
   function injectAddonMenu(products, settings) {
@@ -1044,6 +1074,100 @@
     return true;
   }
 
+  // The owner's printed BASE RATE card: the plain flavor cake every
+  // dropdown should offer (0.5 kg / 1 kg). Injected once per catalog;
+  // fancy variants (e.g. Pineapple Sunshine) are separate items and stay.
+  const BASE_CAKE_MENU_ITEMS = [
+    { id: "basecakemenu-pineapple", name: "Pineapple Cake", category: "Pineapple", description: "Classic soft pineapple cake with cream and pineapple chunks.", variants: [{ kg: "0.5 kg", price: 450 }, { kg: "1 kg", price: 850 }] },
+    { id: "basecakemenu-mix-fruit", name: "Mix Fruit Cake", category: "Mix Fruit", description: "Fresh seasonal fruits over light whipped cream.", variants: [{ kg: "0.5 kg", price: 550 }, { kg: "1 kg", price: 950 }] },
+    { id: "basecakemenu-butterscotch", name: "Butterscotch Cake", category: "Butterscotch", description: "Crunchy praline and caramel cream in every bite.", variants: [{ kg: "0.5 kg", price: 450 }, { kg: "1 kg", price: 850 }] },
+    { id: "basecakemenu-blueberry", name: "Blueberry Cake", category: "Blueberry", description: "Soft vanilla cream layered with blueberry compote.", variants: [{ kg: "0.5 kg", price: 450 }, { kg: "1 kg", price: 850 }] },
+    { id: "basecakemenu-raspberry", name: "Raspberry Cake", category: "Raspberry", description: "Tangy raspberry filling with silky cream.", variants: [{ kg: "0.5 kg", price: 450 }, { kg: "1 kg", price: 850 }] },
+    { id: "basecakemenu-strawberry", name: "Strawberry Cake", category: "Strawberry", description: "Fresh strawberries and cream on a fluffy sponge.", variants: [{ kg: "0.5 kg", price: 450 }, { kg: "1 kg", price: 850 }] },
+    { id: "basecakemenu-chocolate", name: "Chocolate Cake", category: "Chocolate", description: "The classic rich chocolate cake, moist and simple.", variants: [{ kg: "0.5 kg", price: 450 }, { kg: "1 kg", price: 850 }] },
+    { id: "basecakemenu-biscoff", name: "Biscoff Cake", category: "Biscoff", description: "Caramelized biscuit spread with crunchy crumble.", variants: [{ kg: "0.5 kg", price: 550 }, { kg: "1 kg", price: 999 }] },
+    { id: "basecakemenu-red-velvet", name: "Red Velvet Cake", category: "Red Velvet", description: "Velvety red sponge with cream cheese frosting.", variants: [{ kg: "0.5 kg", price: 500 }, { kg: "1 kg", price: 900 }] },
+    { id: "basecakemenu-mango", name: "Mango Cake", category: "Mango", description: "Real mango pulp cream on a soft vanilla base.", variants: [{ kg: "0.5 kg", price: 450 }, { kg: "1 kg", price: 850 }] }
+  ];
+
+  // The owner's printed CHOCOLATE section card. Chocolate KitKat files
+  // into the KitKat dropdown; everything else joins Chocolate. Also fixes
+  // the existing Chocolate Truffle price to match the card (runs once;
+  // later admin edits always win).
+  const CHOCO_MENU_ITEMS = [
+    { id: "chocomenu-cream", name: "Chocolate Cream", description: "Silky chocolate cream layered on a soft sponge.", category: "Chocolate", variants: [{ kg: "500g", price: 550 }, { kg: "1Kg", price: 1000 }] },
+    { id: "chocomenu-kitkat", name: "Chocolate KitKat", description: "Crunchy KitKat fingers over chocolate cream.", category: "KitKat", variants: [{ kg: "500g", price: 600 }, { kg: "1Kg", price: 1000 }] },
+    { id: "chocomenu-blueberry", name: "Chocolate Blueberry", description: "Chocolate cream with a blueberry compote swirl.", category: "Chocolate", variants: [{ kg: "500g", price: 550 }, { kg: "1Kg", price: 950 }] },
+    { id: "chocomenu-blueberry-cake", name: "Blueberry Chocolate Cake", description: "Blueberry-forward chocolate cake with fresh berries.", category: "Chocolate", variants: [{ kg: "500g", price: 550 }, { kg: "1Kg", price: 950 }] },
+    { id: "chocomenu-raspberry", name: "Chocolate Raspberry", description: "Dark chocolate paired with tangy raspberry.", category: "Chocolate", variants: [{ kg: "500g", price: 550 }, { kg: "1Kg", price: 950 }] },
+    { id: "chocomenu-strawberry", name: "Chocolate Strawberry", description: "Chocolate cream crowned with fresh strawberries.", category: "Chocolate", variants: [{ kg: "500g", price: 550 }, { kg: "1Kg", price: 950 }] },
+    { id: "chocomenu-milki", name: "Milki Chocolate Cake", description: "Milky soft chocolate cake, light and melt-in-mouth.", category: "Chocolate", variants: [{ kg: "500g", price: 550 }, { kg: "1Kg", price: 950 }] },
+    { id: "chocomenu-marble", name: "Marble Cake", description: "Vanilla and chocolate swirled into a classic marble.", category: "Chocolate", variants: [{ kg: "500g", price: 500 }, { kg: "1Kg", price: 900 }] },
+    { id: "chocomenu-mango", name: "Chocolate Mango Cake", description: "Chocolate sponge with a mango cream twist.", category: "Chocolate", variants: [{ kg: "500g", price: 500 }, { kg: "1Kg", price: 950 }] }
+  ];
+
+  const CHOCO_TRUFFLE_PRICE_FIX = { "0.5 kg": 550, "1 kg": 950 };
+
+  function injectChocoMenu(products, settings) {
+    if (settings && settings.chocoMenuV1) {
+      return false;
+    }
+    const existing = new Set(products.map((product) => product.id));
+    let added = false;
+    CHOCO_MENU_ITEMS.forEach((item) => {
+      if (existing.has(item.id)) {
+        return;
+      }
+      products.push({
+        id: item.id,
+        name: item.name,
+        category: item.category,
+        description: item.description,
+        details: "",
+        image: "",
+        active: true,
+        variants: item.variants
+      });
+      added = true;
+    });
+    // Match the existing Chocolate Truffle price card (550 / 950).
+    const truffle = products.find((product) => product.id === "cake-001");
+    if (truffle && Array.isArray(truffle.variants)) {
+      truffle.variants.forEach((variant) => {
+        const price = CHOCO_TRUFFLE_PRICE_FIX[variant.kg];
+        if (price !== undefined) {
+          variant.price = price;
+        }
+      });
+    }
+    return added;
+  }
+
+  function injectBaseCakes(products, settings) {
+    if (settings && settings.baseCakesV1) {
+      return false;
+    }
+    const existing = new Set(products.map((product) => product.id));
+    let added = false;
+    BASE_CAKE_MENU_ITEMS.forEach((item) => {
+      if (existing.has(item.id)) {
+        return;
+      }
+      products.push({
+        id: item.id,
+        name: item.name,
+        category: item.category,
+        description: item.description,
+        details: "",
+        image: "",
+        active: true,
+        variants: item.variants
+      });
+      added = true;
+    });
+    return added;
+  }
+
   function injectBreadMenu(products, settings) {
     if (settings && settings.breadMenuV1) {
       return false;
@@ -1120,9 +1244,12 @@
     });
     const migratedCategories = mergeFlavorCategories(data.categories, defaults.categories);
     const addonMenuAdded = injectAddonMenu(products, settings);
+    applyAddonPriceFixes(products, settings);
     const savouryMenuAdded = injectSavouryMenu(products, settings);
     const bentoCheeseMenuAdded = injectBentoCheeseMenus(products, settings);
     const breadMenuAdded = injectBreadMenu(products, settings);
+    const baseCakesAdded = injectBaseCakes(products, settings);
+    const chocoMenuAdded = injectChocoMenu(products, settings);
     applySavouryPriceFixes(products, settings);
     applyFlavorOrganization(products);
     stampExpressDelivery(products);
@@ -1138,9 +1265,12 @@
         ...settings,
         coupons: sanitizeCoupons(settings.coupons, defaults.settings.coupons),
         addonMenuV1: Boolean(settings.addonMenuV1) || addonMenuAdded,
+        addonPriceV2: true, // price fixes apply once on first load with this version
         savouryMenuV1: Boolean(settings.savouryMenuV1) || savouryMenuAdded,
         bentoCheeseMenuV1: Boolean(settings.bentoCheeseMenuV1) || bentoCheeseMenuAdded,
         breadMenuV1: Boolean(settings.breadMenuV1) || breadMenuAdded,
+        baseCakesV1: Boolean(settings.baseCakesV1) || baseCakesAdded,
+        chocoMenuV1: Boolean(settings.chocoMenuV1) || chocoMenuAdded,
         savouryPriceV2: true, // price fixes apply once on first load with this version
         bakeryName:
           settings.bakeryName === ["Sweet", "Layer", "Bakery"].join(" ")
