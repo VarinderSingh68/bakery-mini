@@ -1335,6 +1335,110 @@
   // device cache can never reappear as a separate dropdown.
   const CHOCO_LEGACY_CATEGORY_NAMES = ["chocolate classics", "chocolate classic", "chocolate cake", "chocolate cakes"];
 
+  // Owner-provided cake photos. Attached by product NAME (not id) so they
+  // reach every device after a deploy: products saved with the legacy id
+  // scheme and fresh installs with new ids both pick the photo up. Runs on
+  // every load but only fills EMPTY image fields - an image the owner set
+  // through the admin panel always wins and is never overwritten.
+  const CAKE_PHOTOS_BY_NAME = {
+    "pineapple sunshine": "images/pineapple-sunshine.jpg",
+    "fresh fruit gateau": "images/fresh-fruit-gateau.jpg",
+    "mango mousse cake": "images/mango-mousse.jpg",
+    "black forest cherry": "images/black-forest-cherry.jpg",
+    "red velvet cream cheese": "images/red-velvet-cream-cheese.jpg",
+    "butterscotch praline": "images/butterscotch-praline.jpg",
+    "pineapple bento cake": "images/pineapple-bento.jpg",
+    "strawberry bento": "images/strawberry-bento.jpg",
+    "raspberry bento": "images/raspberry-bento.jpg",
+    "blueberry bento": "images/blueberry-bento.jpg",
+    "biscoff bento": "images/biscoff-bento.jpg",
+    "red velvet bento": "images/red-velvet-bento.jpg",
+    "cherry almond gateau": "images/cherry-almond-gateau.jpg",
+    "chocolate dry fruit": "images/chocolate-dry-fruit.jpg",
+    "chocolate cream": "images/chocolate-cream.jpg",
+    "saffron almond cream": "images/saffron-almond-cream.jpg",
+    "hazelnut praline crunch": "images/hazelnut-praline-crunch.jpg",
+    "strawberry vanilla cloud": "images/strawberry-vanilla-cloud.jpg",
+    "anniversary rose cake": "images/anniversary-rose.jpg",
+    "princess pink cake": "images/princess-pink.jpg",
+    "mango cake": "images/mango-cake.jpg",
+    "rose pistachio celebration": "images/rose-pistachio.jpg",
+    "pistachio rose cake": "images/pistachio-rose.jpg",
+    "classic vanilla bean": "images/classic-vanilla-bean.jpg",
+    "mix fruit cake": "images/mix-fruit-cake.jpg",
+    "rainbow sprinkle": "images/rainbow-sprinkle.jpg",
+    "choco vanilla marble": "images/choco-vanilla-marble.jpg",
+    "white forest": "images/white-forest.jpg",
+    "chocolate cake": "images/chocolate-cake.jpg",
+    "walnut brownie": "images/walnut-brownie.jpg",
+    "chocolate kitkat": "images/chocolate-kitkat.jpg",
+    "chocolate truffle": "images/chocolate-truffle.jpg",
+    "milki chocolate cake": "images/milki-chocolate.jpg",
+    "blue ocean birthday cake": "images/blue-ocean-birthday.jpg",
+    "strawberry cake": "images/strawberry-cake.jpg",
+    "caramel almond": "images/caramel-almond.jpg",
+    "butterscotch cake": "images/butterscotch-cake.jpg",
+    "dark chocolate cherry": "images/dark-chocolate-cherry.jpg",
+    "lotus biscoff dream": "images/lotus-biscoff-dream.jpg",
+    "raspberry white chocolate": "images/raspberry-white-chocolate.jpg",
+    "chocolate bento": "images/chocolate-bento.jpg",
+    "baby shower vanilla": "images/baby-shower-vanilla.jpg",
+    "triple chocolate mousse": "images/triple-chocolate-mousse.jpg",
+    "confetti party cake": "images/confetti-party.jpg",
+    "lychee rose cloud": "images/lychee-rose-cloud.jpg",
+    "chocolate strawberry": "images/chocolate-strawberry.jpg",
+    "red velvet cake": "images/red-velvet-cake.jpg",
+    "honey vanilla silk": "images/honey-vanilla-silk.jpg",
+    "wedding white chocolate": "images/wedding-white-chocolate.jpg",
+    "almond milk cake": "images/almond-milk-cake.jpg",
+    "raspberry cake": "images/raspberry-cake.jpg",
+    "milk cream tres leches": "images/tres-leches.jpg",
+    "pecan maple cake": "images/pecan-maple.jpg",
+    "mocha hazelnut": "images/mocha-hazelnut.jpg",
+    "photo memory cake": "images/photo-memory.jpg",
+    "graduation chocolate cake": "images/graduation-chocolate.jpg",
+    "biscoff cake": "images/biscoff-cake.jpg",
+    "cookies and cream": "images/cookies-and-cream.jpg",
+    "new york cheese cake slice": "images/newyork-cheesecake.jpg",
+    "biscoff cheese cake slice": "images/biscoff-cheesecake.jpg",
+    "blueberry cheese cake slice": "images/blueberry-cheesecake.jpg",
+    "nutella cheese cake slice": "images/nutella-cheesecake.jpg",
+    "blueberry tub cake": "images/blueberry-tub.jpg",
+    "chocolate kitkat tub cake": "images/kitkat-tub.jpg",
+    "chocolate tub cake": "images/chocolate-tub.jpg",
+    "strawberry tub cake": "images/strawberry-tub.jpg",
+    "kesar pista": "images/kesar-pista.jpg",
+    "peach cream garden": "images/peach-cream-garden.jpg",
+    "vanilla chai cake": "images/vanilla-chai.jpg",
+    "matcha white chocolate": "images/matcha-white-chocolate.jpg",
+    "strawberry cheese cake slice": "images/strawberry-cheesecake.jpg",
+    "chocolate raspberry": "images/chocolate-raspberry.jpg",
+    "earl grey cream cake": "images/earl-grey-cream.jpg",
+    "espresso fudge cake": "images/espresso-fudge.jpg",
+    "marble cake": "images/marble-cake.jpg",
+    "salted caramel chocolate": "images/salted-caramel-chocolate.jpg",
+    "dutch cocoa fudge": "images/dutch-cocoa-fudge.jpg",
+    "tender coconut": "images/tender-coconut.jpg",
+    "rasmalai fusion": "images/rasmalai-fusion.jpg",
+    "biscoff caramel": "images/biscoff-caramel.jpg",
+    "chocolate orange zest": "images/chocolate-orange-zest.jpg",
+    "chocolate oreo tub cake": "images/oreo-tub.jpg",
+    "tiramisu tub cake": "images/tiramisu-tub.jpg",
+    "oreo brownie": "images/oreo-brownie.jpg"
+  };
+
+  function applyCakePhotos(products) {
+    let changed = false;
+    products.forEach((product) => {
+      const photo = CAKE_PHOTOS_BY_NAME[String(product.name || "").trim().toLowerCase()];
+      if (photo && !product.image) {
+        product.image = photo;
+        changed = true;
+      }
+    });
+    return changed;
+  }
+
   function mergeChocolateClassics(products) {
     let changed = false;
     products.forEach((product) => {
@@ -1384,6 +1488,7 @@
     const slicesTubsAdded = injectCheeseSlicesAndTubs(products, settings);
     refileLegacyCategories(products, settings);
     mergeChocolateClassics(products);
+    applyCakePhotos(products);
     applySavouryPriceFixes(products, settings);
     applyFlavorOrganization(products);
     stampExpressDelivery(products);
