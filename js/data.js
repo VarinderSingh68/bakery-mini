@@ -764,6 +764,7 @@
     "Cheese Cake",
     "Savouries",
     "Breads",
+    "Tub Cake",
     "Add-ons",
     "Customized Cakes"
   ];
@@ -1108,6 +1109,71 @@
 
   const CHOCO_TRUFFLE_PRICE_FIX = { "0.5 kg": 550, "1 kg": 950 };
 
+  // The owner's printed CHEESE CAKE SLICE section: single pieces.
+  // (The whole 500g/1Kg cheese cakes already exist and match the card.)
+  const CHEESE_SLICE_MENU_ITEMS = [
+    { id: "chslicemenu-newyork", name: "New York Cheese Cake Slice (Single)", description: "One slice of the classic dense New York cheesecake.", variants: [{ kg: "1 pc", price: 150 }] },
+    { id: "chslicemenu-biscoff", name: "Biscoff Cheese Cake Slice (Single)", description: "One slice crowned with Biscoff spread and crumble.", variants: [{ kg: "1 pc", price: 180 }] },
+    { id: "chslicemenu-blueberry", name: "Blueberry Cheese Cake Slice (Single)", description: "One slice with a blueberry compote swirl.", variants: [{ kg: "1 pc", price: 180 }] },
+    { id: "chslicemenu-nutella", name: "Nutella Cheese Cake Slice (Single)", description: "One slice with a glossy Nutella topping.", variants: [{ kg: "1 pc", price: 180 }] },
+    { id: "chslicemenu-strawberry", name: "Strawberry Cheese Cake Slice (Single)", description: "One slice with fresh strawberry glaze.", variants: [{ kg: "1 pc", price: 180 }] }
+  ];
+
+  // The owner's printed TUB CAKE section. The three tub cakes that used to
+  // live in Add-ons move here and get the printed prices (Blueberry and
+  // Strawberry 110 -> 120); the rest are new.
+  const TUB_CAKE_MENU_ITEMS = [
+    { id: "tubmenu-pineapple", name: "Pineapple Tub Cake", description: "Single-serve pineapple tub cake.", variants: [{ kg: "1 tub", price: 110 }] },
+    { id: "tubmenu-chocolate", name: "Chocolate Tub Cake", description: "Single-serve chocolate tub cake.", variants: [{ kg: "1 tub", price: 120 }] },
+    { id: "tubmenu-tuti-fruity", name: "Tuti Fruity Tub Cake", description: "Single-serve tuti fruity tub cake.", variants: [{ kg: "1 tub", price: 150 }] },
+    { id: "tubmenu-fruit-cream", name: "Fruit Cream", description: "Chilled fruit cream cup, fresh and fruity.", variants: [{ kg: "1 tub", price: 110 }] },
+    { id: "tubmenu-choco-kitkat", name: "Chocolate KitKat Tub Cake", description: "Chocolate tub cake with KitKat crunch.", variants: [{ kg: "1 tub", price: 120 }] },
+    { id: "tubmenu-choco-oreo", name: "Chocolate Oreo Tub Cake", description: "Chocolate tub cake with Oreo chunks.", variants: [{ kg: "1 tub", price: 120 }] }
+  ];
+
+  const TUB_MIGRATION_PRICE_FIXES = {
+    "addonmenu-blueberry-tub": 120,
+    "addonmenu-strawberry-tub": 120
+  };
+
+  function injectCheeseSlicesAndTubs(products, settings) {
+    if (settings && settings.slicesTubsV1) {
+      return false;
+    }
+    const existing = new Set(products.map((product) => product.id));
+    let added = false;
+    const push = (item, category) => {
+      if (existing.has(item.id)) {
+        return;
+      }
+      products.push({
+        id: item.id,
+        name: item.name,
+        category,
+        description: item.description,
+        details: "",
+        image: "",
+        active: true,
+        variants: item.variants
+      });
+      added = true;
+    };
+    CHEESE_SLICE_MENU_ITEMS.forEach((item) => push(item, "Cheese Cake"));
+    TUB_CAKE_MENU_ITEMS.forEach((item) => push(item, "Tub Cake"));
+    // Move the three tub cakes out of Add-ons into Tub Cake + fix prices.
+    products.forEach((product) => {
+      if (product.id === "addonmenu-blueberry-tub" || product.id === "addonmenu-strawberry-tub" || product.id === "addonmenu-tiramisu-tub") {
+        product.category = "Tub Cake";
+        product.details = "";
+        const fixed = TUB_MIGRATION_PRICE_FIXES[product.id];
+        if (fixed !== undefined && Array.isArray(product.variants) && product.variants[0]) {
+          product.variants[0].price = fixed;
+        }
+      }
+    });
+    return added;
+  }
+
   function injectChocoMenu(products, settings) {
     if (settings && settings.chocoMenuV1) {
       return false;
@@ -1225,6 +1291,43 @@
     });
   }
 
+  // Legacy demo categories retired at the owner's request. Each product is
+  // re-filed to its closest flavor category, then the empty dropdowns are
+  // removed from the category list (runs once; flag travels with sync).
+  const LEGACY_CATEGORIES_TO_DROP = ["Cream Cakes", "Fruit Cakes", "Celebration Cakes", "Premium Specials"];
+  const LEGACY_CATEGORY_REFILE_V1 = {
+    // Cream Cakes -> White Forest / Truffle / Rasmalai
+    "cake-023": "White Forest", "cake-045": "Truffle", "cake-046": "White Forest",
+    "cake-047": "Rasmalai", "cake-048": "Rasmalai", "cake-049": "Mix Fruit",
+    "cake-050": "Rasmalai", "cake-051": "Truffle",
+    // Fruit Cakes -> Mix Fruit
+    "cake-016": "Mix Fruit", "cake-024": "Mix Fruit", "cake-039": "Mix Fruit",
+    "cake-040": "Mix Fruit", "cake-041": "Mix Fruit", "cake-042": "Mix Fruit",
+    "cake-043": "Mix Fruit", "cake-044": "Mix Fruit",
+    // Celebration Cakes -> Rasmalai (mithai) / Customized Cakes (party) / Butterscotch (nutty)
+    "cake-015": "Rasmalai", "cake-017": "Customized Cakes", "cake-025": "Customized Cakes",
+    "cake-052": "Butterscotch", "cake-053": "Customized Cakes", "cake-054": "Customized Cakes",
+    "cake-055": "Customized Cakes", "cake-056": "Customized Cakes", "cake-057": "Customized Cakes",
+    "cake-059": "Rasmalai",
+    // Premium Specials -> Truffle / Rasmalai / Butterscotch
+    "cake-012": "Truffle", "cake-013": "Rasmalai", "cake-018": "Butterscotch",
+    "cake-020": "Truffle", "cake-032": "Rasmalai", "cake-033": "Rasmalai",
+    "cake-036": "Butterscotch"
+  };
+
+  function refileLegacyCategories(products, settings) {
+    if (settings && settings.refileLegacyCatsV1) {
+      return false;
+    }
+    products.forEach((product) => {
+      const target = LEGACY_CATEGORY_REFILE_V1[product.id];
+      if (target && LEGACY_CATEGORIES_TO_DROP.includes(product.category)) {
+        product.category = target;
+      }
+    });
+    return true;
+  }
+
   function normalizeData(input) {
     const defaults = getDefaultData();
     const data = input && typeof input === "object" ? input : {};
@@ -1242,7 +1345,12 @@
         variants: cleanVariants(product.variants, fallbackProduct.variants)
       };
     });
-    const migratedCategories = mergeFlavorCategories(data.categories, defaults.categories);
+    const migratedCategoriesRaw = mergeFlavorCategories(data.categories, defaults.categories);
+    // Retired categories leave the dropdown list only on the first run of
+    // this migration, so a category the owner re-creates later stays.
+    const migratedCategories = settings && settings.refileLegacyCatsV1
+      ? migratedCategoriesRaw
+      : migratedCategoriesRaw.filter((name) => !LEGACY_CATEGORIES_TO_DROP.includes(name));
     const addonMenuAdded = injectAddonMenu(products, settings);
     applyAddonPriceFixes(products, settings);
     const savouryMenuAdded = injectSavouryMenu(products, settings);
@@ -1250,6 +1358,8 @@
     const breadMenuAdded = injectBreadMenu(products, settings);
     const baseCakesAdded = injectBaseCakes(products, settings);
     const chocoMenuAdded = injectChocoMenu(products, settings);
+    const slicesTubsAdded = injectCheeseSlicesAndTubs(products, settings);
+    refileLegacyCategories(products, settings);
     applySavouryPriceFixes(products, settings);
     applyFlavorOrganization(products);
     stampExpressDelivery(products);
@@ -1271,6 +1381,8 @@
         breadMenuV1: Boolean(settings.breadMenuV1) || breadMenuAdded,
         baseCakesV1: Boolean(settings.baseCakesV1) || baseCakesAdded,
         chocoMenuV1: Boolean(settings.chocoMenuV1) || chocoMenuAdded,
+        slicesTubsV1: Boolean(settings.slicesTubsV1) || slicesTubsAdded,
+        refileLegacyCatsV1: true, // refile + dropdown removal apply on first load with this version
         savouryPriceV2: true, // price fixes apply once on first load with this version
         bakeryName:
           settings.bakeryName === ["Sweet", "Layer", "Bakery"].join(" ")
