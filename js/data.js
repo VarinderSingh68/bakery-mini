@@ -587,6 +587,11 @@
         phone: "+91 98765 43210",
         address: "Cake Street, Your City",
         adminPasscode: "owner123",
+        coupons: [
+          { code: "SWEET10", type: "percent", value: 10, label: "10% OFF", min: 0 },
+          { code: "CAKE50", type: "flat", value: 50, label: "Rs. 50 OFF", min: 400 },
+          { code: "PARTY100", type: "flat", value: 100, label: "Rs. 100 OFF", min: 800 }
+        ],
         emailjs: {
           publicKey: "bErS5uMcw3hPVUd01",
           serviceId: "service_l9tcf9a",
@@ -758,6 +763,7 @@
     "Red Velvet",
     "Cheese Cake",
     "Savouries",
+    "Breads",
     "Add-ons",
     "Customized Cakes"
   ];
@@ -871,6 +877,38 @@
     { id: "addonmenu-ribbon-spray", name: "Ribbon Spray", price: 99, unit: "1 pc", group: "Extras", description: "Ribbon spray to dress up the celebration." }
   ];
 
+  function sanitizeCoupons(list, fallbackList) {
+    // Coupons live in settings so the owner edits them in admin and they
+    // sync to every device with the catalog. Missing/invalid entries fall
+    // back to the built-in defaults.
+    if (!Array.isArray(list)) {
+      return (fallbackList || getDefaultData().settings.coupons).slice();
+    }
+    const cleaned = [];
+    const seen = new Set();
+    list.forEach((entry) => {
+      if (!entry || typeof entry !== "object") {
+        return;
+      }
+      const code = String(entry.code || "").trim().toUpperCase();
+      const type = entry.type === "percent" ? "percent" : "flat";
+      const value = Math.max(0, Number(entry.value) || 0);
+      const min = Math.max(0, Number(entry.min) || 0);
+      if (!code || value <= 0 || seen.has(code)) {
+        return;
+      }
+      seen.add(code);
+      cleaned.push({
+        code,
+        type,
+        value,
+        min,
+        label: String(entry.label || "").trim() || (type === "percent" ? value + "% OFF" : "Rs. " + value + " OFF")
+      });
+    });
+    return cleaned;
+  }
+
   function injectAddonMenu(products, settings) {
     // Runs once per catalog (flag travels with the synced data, so items the
     // owner later deletes in admin stay deleted).
@@ -903,14 +941,14 @@
   const SAVOURY_MENU_ITEMS = [
     { id: "savourymenu-walnut-brownie", name: "Walnut Brownie", group: "Brownie", description: "Fudgy brownie loaded with walnuts.", variants: [{ kg: "1 pc", price: 100 }] },
     { id: "savourymenu-kitkat-brownie", name: "Kitkat Brownie", group: "Brownie", description: "Brownie topped with crunchy KitKat.", variants: [{ kg: "1 pc", price: 130 }] },
-    { id: "savourymenu-oreo-brownie", name: "Oreo Brownie", group: "Brownie", description: "Brownie with Oreo cookie chunks.", variants: [{ kg: "1 pc", price: 130 }] },
+    { id: "savourymenu-oreo-brownie", name: "Oreo Brownie", group: "Brownie", description: "Brownie with Oreo cookie chunks.", variants: [{ kg: "1 pc", price: 120 }] },
     { id: "savourymenu-biscoff-brownie", name: "Biscoff Brownie", group: "Brownie", description: "Brownie swirled with Biscoff spread.", variants: [{ kg: "1 pc", price: 150 }] },
     { id: "savourymenu-nutella-brownie", name: "Nutella Brownie", group: "Brownie", description: "Brownie filled with rich Nutella.", variants: [{ kg: "1 pc", price: 150 }] },
     { id: "savourymenu-vanilla-dry-fruit", name: "Vanilla Dry Fruit", group: "Dry Cake", description: "Vanilla dry cake packed with dry fruits.", variants: [{ kg: "280g", price: 250 }, { kg: "450g", price: 450 }, { kg: "700g", price: 700 }] },
     { id: "savourymenu-vanilla-tuti-fruity", name: "Vanilla Tuti Fruity", group: "Dry Cake", description: "Vanilla dry cake studded with tutti frutti.", variants: [{ kg: "280g", price: 220 }, { kg: "450g", price: 400 }, { kg: "700g", price: 650 }] },
-    { id: "savourymenu-chocolate-walnut", name: "Chocolate Walnut", group: "Dry Cake", description: "Chocolate dry cake with walnut crunch.", variants: [{ kg: "280g", price: 250 }, { kg: "450g", price: 450 }, { kg: "700g", price: 700 }] },
-    { id: "savourymenu-chocolate-dry-fruit", name: "Chocolate Dry Fruit", group: "Dry Cake", description: "Chocolate dry cake loaded with dry fruits.", variants: [{ kg: "280g", price: 250 }, { kg: "450g", price: 450 }, { kg: "700g", price: 700 }] },
-    { id: "savourymenu-chocolate-chocochip", name: "Chocolate ChocoChip", group: "Dry Cake", description: "Chocolate dry cake with choco chips.", variants: [{ kg: "280g", price: 250 }, { kg: "450g", price: 450 }, { kg: "700g", price: 700 }] },
+    { id: "savourymenu-chocolate-walnut", name: "Chocolate Walnut", group: "Dry Cake", description: "Chocolate dry cake with walnut crunch.", variants: [{ kg: "280g", price: 280 }, { kg: "450g", price: 450 }, { kg: "700g", price: 700 }] },
+    { id: "savourymenu-chocolate-dry-fruit", name: "Chocolate Dry Fruit", group: "Dry Cake", description: "Chocolate dry cake loaded with dry fruits.", variants: [{ kg: "280g", price: 280 }, { kg: "450g", price: 450 }, { kg: "700g", price: 700 }] },
+    { id: "savourymenu-chocolate-chocochip", name: "Chocolate ChocoChip", group: "Dry Cake", description: "Chocolate dry cake with choco chips.", variants: [{ kg: "280g", price: 280 }, { kg: "450g", price: 450 }, { kg: "700g", price: 700 }] },
     { id: "savourymenu-vanilla-muffin", name: "Vanilla Muffin", group: "Muffin", description: "Soft vanilla muffin, fresh from the oven.", variants: [{ kg: "1 pc", price: 35 }] },
     { id: "savourymenu-chocolate-muffin", name: "Chocolate Muffin", group: "Muffin", description: "Rich chocolate muffin with a moist crumb.", variants: [{ kg: "1 pc", price: 40 }] },
     { id: "savourymenu-mango-muffin", name: "Mango Muffin", group: "Muffin", description: "Seasonal mango muffin with real pulp.", variants: [{ kg: "1 pc", price: 40 }] },
@@ -931,6 +969,15 @@
     { id: "bentomenu-biscoff", name: "Biscoff Bento", category: "Biscoff", description: "Little 250g bento cake swirled with Biscoff.", variants: [{ kg: "250g", price: 349 }] },
     { id: "bentomenu-chocolate", name: "Chocolate Bento", category: "Chocolate", description: "Little 250g chocolate bento cake, rich and soft.", variants: [{ kg: "250g", price: 299 }] },
     { id: "bentomenu-red-velvet", name: "Red Velvet Bento", category: "Red Velvet", description: "Little 250g red velvet bento cake with cream cheese frosting.", variants: [{ kg: "250g", price: 299 }] }
+  ];
+
+  // The owner's printed BREAD menu. Single pack-size variants exactly as
+  // printed; injected once into the Breads dropdown.
+  const BREAD_MENU_ITEMS = [
+    { id: "breadmenu-burger-bun", name: "Burger Bun", description: "Soft, pillowy burger buns for hearty homemade burgers.", variants: [{ kg: "4 pcs", price: 90 }] },
+    { id: "breadmenu-milk-pav", name: "Milk Pav", description: "Fluffy milk pav, perfect with bhaji or chai.", variants: [{ kg: "200g", price: 60 }] },
+    { id: "breadmenu-atta-bread", name: "Atta Bread", description: "Wholesome whole-wheat bread, baked fresh daily.", variants: [{ kg: "200g", price: 80 }] },
+    { id: "breadmenu-multigrain-bread", name: "Multigrain Bread", description: "Nutty multigrain loaf packed with seeds and goodness.", variants: [{ kg: "200g", price: 100 }] }
   ];
 
   const CHEESE_MENU_ITEMS = [
@@ -965,6 +1012,60 @@
     };
     BENTO_MENU_ITEMS.forEach(push);
     CHEESE_MENU_ITEMS.forEach(push);
+    return added;
+  }
+
+  // Printed Savouries price corrections from the owner's updated menu:
+  // Oreo Brownie Rs. 120, chocolate dry cakes 280g = Rs. 280. Runs once
+  // (flag travels with sync); admin price edits afterwards always win.
+  const SAVOURY_PRICE_FIXES_V2 = {
+    "savourymenu-oreo-brownie": { "1 pc": 120 },
+    "savourymenu-chocolate-walnut": { "280g": 280 },
+    "savourymenu-chocolate-dry-fruit": { "280g": 280 },
+    "savourymenu-chocolate-chocochip": { "280g": 280 }
+  };
+
+  function applySavouryPriceFixes(products, settings) {
+    if (settings && settings.savouryPriceV2) {
+      return false;
+    }
+    products.forEach((product) => {
+      const fixes = SAVOURY_PRICE_FIXES_V2[product.id];
+      if (!fixes || !Array.isArray(product.variants)) {
+        return;
+      }
+      product.variants.forEach((variant) => {
+        const price = fixes[variant.kg];
+        if (price !== undefined) {
+          variant.price = price;
+        }
+      });
+    });
+    return true;
+  }
+
+  function injectBreadMenu(products, settings) {
+    if (settings && settings.breadMenuV1) {
+      return false;
+    }
+    const existing = new Set(products.map((product) => product.id));
+    let added = false;
+    BREAD_MENU_ITEMS.forEach((item) => {
+      if (existing.has(item.id)) {
+        return;
+      }
+      products.push({
+        id: item.id,
+        name: item.name,
+        category: "Breads",
+        description: item.description,
+        details: "",
+        image: "",
+        active: true,
+        variants: item.variants
+      });
+      added = true;
+    });
     return added;
   }
 
@@ -1021,6 +1122,8 @@
     const addonMenuAdded = injectAddonMenu(products, settings);
     const savouryMenuAdded = injectSavouryMenu(products, settings);
     const bentoCheeseMenuAdded = injectBentoCheeseMenus(products, settings);
+    const breadMenuAdded = injectBreadMenu(products, settings);
+    applySavouryPriceFixes(products, settings);
     applyFlavorOrganization(products);
     stampExpressDelivery(products);
     const specialSource = Array.isArray(data.specials) ? data.specials : defaults.specials;
@@ -1033,9 +1136,12 @@
       settings: {
         ...defaults.settings,
         ...settings,
+        coupons: sanitizeCoupons(settings.coupons, defaults.settings.coupons),
         addonMenuV1: Boolean(settings.addonMenuV1) || addonMenuAdded,
         savouryMenuV1: Boolean(settings.savouryMenuV1) || savouryMenuAdded,
         bentoCheeseMenuV1: Boolean(settings.bentoCheeseMenuV1) || bentoCheeseMenuAdded,
+        breadMenuV1: Boolean(settings.breadMenuV1) || breadMenuAdded,
+        savouryPriceV2: true, // price fixes apply once on first load with this version
         bakeryName:
           settings.bakeryName === ["Sweet", "Layer", "Bakery"].join(" ")
             ? defaults.settings.bakeryName

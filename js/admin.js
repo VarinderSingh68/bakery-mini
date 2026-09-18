@@ -51,6 +51,10 @@
     bannerList: document.getElementById("bannerList"),
     settingsForm: document.getElementById("settingsForm"),
     settingsMessage: document.getElementById("settingsMessage"),
+    couponForm: document.getElementById("couponForm"),
+    couponList: document.getElementById("couponList"),
+    couponMessage: document.getElementById("couponMessage"),
+    couponReset: document.getElementById("couponReset"),
     orderList: document.getElementById("orderList"),
     clearOrders: document.getElementById("clearOrders"),
     resetData: document.getElementById("resetData"),
@@ -69,6 +73,8 @@
     resetSpecialForm();
     resetBannerForm();
     populateSettingsForm();
+    resetCouponForm();
+    renderCouponList();
 
     if (sessionStorage.getItem("bakery_admin_authenticated") === "yes") {
       showDashboard();
@@ -124,6 +130,9 @@
     elements.bannerList.addEventListener("click", handleBannerListClick);
 
     elements.settingsForm.addEventListener("submit", handleSettingsSubmit);
+    elements.couponForm.addEventListener("submit", handleCouponSubmit);
+    elements.couponReset.addEventListener("click", resetCouponForm);
+    elements.couponList.addEventListener("click", handleCouponClick);
     elements.resetData.addEventListener("click", handleResetData);
     elements.cloudSyncButton.addEventListener("click", async () => {
       await publishCatalog("Published - all devices now see this menu.");
@@ -255,6 +264,7 @@
     renderSpecialList();
     renderBannerList();
     renderOrderList();
+    renderCouponList();
     populateSettingsForm();
     loadRemoteOrders();
   }
@@ -821,6 +831,138 @@
     setTimeout(() => {
       elements.settingsMessage.textContent = "";
     }, 2500);
+  }
+
+  function resetCouponForm() {
+    const form = elements.couponForm;
+    form.reset();
+    form.elements.couponType.value = "percent";
+    form.elements.couponMin.value = "0";
+    form.dataset.editing = "";
+    form.querySelector("button[type=submit]").textContent = "Add coupon";
+    elements.couponMessage.textContent = "";
+  }
+
+  function renderCouponList() {
+    const coupons = Array.isArray(data.settings.coupons) ? data.settings.coupons : [];
+    if (!coupons.length) {
+      elements.couponList.innerHTML = `<div class="empty-state"><strong>No coupons yet</strong><p>Add your first coupon with the form above — it goes live on the website instantly.</p></div>`;
+      return;
+    }
+    elements.couponList.innerHTML = coupons
+      .map((coupon, index) => {
+        const valueText =
+          coupon.type === "percent"
+            ? `${coupon.value}% off`
+            : `Rs. ${coupon.value} off`;
+        const minText = coupon.min > 0 ? ` · min order Rs. ${coupon.min}` : " · no minimum";
+        return `
+          <div class="coupon-manage-row">
+            <div>
+              <strong>${dataApi.escapeHtml(coupon.code)}</strong>
+              <span>${dataApi.escapeHtml(valueText)}${dataApi.escapeHtml(minText)}</span>
+            </div>
+            <div class="coupon-manage-actions">
+              <button type="button" class="ghost-button" data-coupon-edit="${index}">Edit</button>
+              <button type="button" class="danger-button" data-coupon-delete="${index}">Delete</button>
+            </div>
+          </div>`;
+      })
+      .join("");
+  }
+
+  function handleCouponSubmit(event) {
+    event.preventDefault();
+    const form = elements.couponForm;
+    const code = form.elements.couponCode.value.trim().toUpperCase();
+    const type = form.elements.couponType.value === "percent" ? "percent" : "flat";
+    const value = Number(form.elements.couponValue.value);
+    const min = Math.max(0, Number(form.elements.couponMin.value) || 0);
+
+    if (!code) {
+      elements.couponMessage.textContent = "Please enter a coupon code.";
+      return;
+    }
+    if (!value || value <= 0) {
+      elements.couponMessage.textContent = "Discount must be greater than zero.";
+      return;
+    }
+    if (type === "percent" && value > 90) {
+      elements.couponMessage.textContent = "Percent discount cannot exceed 90%.";
+      return;
+    }
+
+    if (!Array.isArray(data.settings.coupons)) {
+      data.settings.coupons = [];
+    }
+    const editingIndex = form.dataset.editing;
+    const duplicate = data.settings.coupons.findIndex((entry) => entry.code === code);
+    if (editingIndex !== "" && editingIndex !== undefined) {
+      const index = Number(editingIndex);
+      if (!data.settings.coupons[index]) {
+        elements.couponMessage.textContent = "That coupon no longer exists.";
+        resetCouponForm();
+        return;
+      }
+      if (duplicate !== -1 && duplicate !== index) {
+        elements.couponMessage.textContent = `Coupon "${code}" already exists.`;
+        return;
+      }
+      data.settings.coupons[index] = { code, type, value, min, label: buildCouponLabel(type, value) };
+      elements.couponMessage.textContent = `Coupon ${code} updated.`;
+    } else {
+      if (duplicate !== -1) {
+        elements.couponMessage.textContent = `Coupon "${code}" already exists — edit it instead.`;
+        return;
+      }
+      data.settings.coupons.push({ code, type, value, min, label: buildCouponLabel(type, value) });
+      elements.couponMessage.textContent = `Coupon ${code} added.`;
+    }
+
+    const result = saveAndRefresh();
+    if (result && !result.ok) {
+      elements.couponMessage.textContent = "Saved locally but the cloud sync failed — check the Sync status above.";
+    }
+    renderCouponList();
+    resetCouponForm();
+    setTimeout(() => {
+      elements.couponMessage.textContent = "";
+    }, 3000);
+  }
+
+  function buildCouponLabel(type, value) {
+    return type === "percent" ? `${value}% OFF` : `Rs. ${value} OFF`;
+  }
+
+  function handleCouponClick(event) {
+    const editButton = event.target.closest("[data-coupon-edit]");
+    if (editButton) {
+      const index = Number(editButton.dataset.couponEdit);
+      const coupon = data.settings.coupons[index];
+      if (!coupon) return;
+      const form = elements.couponForm;
+      form.elements.couponCode.value = coupon.code;
+      form.elements.couponType.value = coupon.type;
+      form.elements.couponValue.value = coupon.value;
+      form.elements.couponMin.value = coupon.min || 0;
+      form.dataset.editing = String(index);
+      form.querySelector("button[type=submit]").textContent = "Update coupon";
+      elements.couponMessage.textContent = `Editing ${coupon.code} — change the fields and save.`;
+      return;
+    }
+    const deleteButton = event.target.closest("[data-coupon-delete]");
+    if (deleteButton) {
+      const index = Number(deleteButton.dataset.couponDelete);
+      const coupon = data.settings.coupons[index];
+      if (!coupon) return;
+      if (!window.confirm(`Delete coupon ${coupon.code}? The website stops offering it immediately.`)) {
+        return;
+      }
+      data.settings.coupons.splice(index, 1);
+      saveAndRefresh();
+      renderCouponList();
+      resetCouponForm();
+    }
   }
 
   function renderOrderList() {

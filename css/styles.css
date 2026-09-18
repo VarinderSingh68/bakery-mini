@@ -2699,6 +2699,53 @@ body[data-page="admin"] {
     gap: 12px;
   }
 
+  /* --- Admin coupon manager --- */
+  .coupon-form-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .coupon-manage-list {
+    display: grid;
+    gap: 10px;
+  }
+
+  .coupon-manage-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 12px 14px;
+    border: 1px dashed var(--green-soft-border, #b9dcc2);
+    border-radius: 14px;
+    background: #ffffff;
+  }
+
+  .coupon-manage-row > div:first-child {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+  }
+
+  .coupon-manage-row strong {
+    font-family: var(--font-display);
+    letter-spacing: 0.06em;
+    color: var(--ink, #1f3527);
+  }
+
+  .coupon-manage-row span {
+    font-size: 0.85rem;
+    color: var(--muted, #5c7263);
+  }
+
+  .coupon-manage-actions {
+    display: flex;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+
   .admin-topbar .ghost-button {
     width: 100%;
   }

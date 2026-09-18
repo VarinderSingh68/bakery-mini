@@ -14,11 +14,16 @@
   let categoriesInitialized = false;
   const openCategories = new Set();
   let activeCoupon = null;
-  const COUPONS = [
+  const DEFAULT_COUPONS = [
     { code: "SWEET10", type: "percent", value: 10, label: "10% OFF", min: 0 },
     { code: "CAKE50", type: "flat", value: 50, label: "Rs. 50 OFF", min: 400 },
     { code: "PARTY100", type: "flat", value: 100, label: "Rs. 100 OFF", min: 800 }
   ];
+  // Coupons are managed in the admin panel (data.settings.coupons) and sync
+  // to every device with the catalog. An empty array means the owner removed
+  // them all — fall back to defaults only when the field is missing entirely.
+  const getCoupons = () =>
+    Array.isArray(data.settings.coupons) ? data.settings.coupons : DEFAULT_COUPONS;
 
   const elements = {
     productGrid: document.getElementById("productGrid"),
@@ -1029,7 +1034,7 @@
       elements.couponNote.textContent = "Enter a coupon code.";
       return;
     }
-    const coupon = COUPONS.find((entry) => entry.code === code);
+    const coupon = getCoupons().find((entry) => entry.code === code);
     if (!coupon) {
       activeCoupon = null;
       elements.couponNote.textContent = "That code is not valid.";
@@ -1088,7 +1093,8 @@
 
   function openCouponPopup() {
     if (elements.couponPopup.getAttribute("aria-hidden") === "false") return;
-    const featured = COUPONS[0];
+    const featured = getCoupons()[0];
+    if (!featured) return; // owner removed all coupons
     elements.couponPopupCode.textContent = featured.code;
     elements.couponPopupSave.textContent = featured.label;
     elements.couponPopup.setAttribute("aria-hidden", "false");

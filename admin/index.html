@@ -10,7 +10,7 @@
       href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=Manrope:wght@400..800&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="../css/styles.css?v=20260924a" />
+    <link rel="stylesheet" href="../css/styles.css?v=20260924d" />
   </head>
   <body data-page="admin">
     <main class="admin-shell">
@@ -315,6 +315,39 @@
           </section>
 
           <section class="admin-panel" id="settingsPanel">
+            <form class="admin-card stack-form coupon-manage" id="couponForm">
+              <p class="eyebrow">Discount coupons</p>
+              <h2>Coupons</h2>
+              <p class="form-note">Coupons appear on the website popup and in the cart. Changes publish to every device automatically.</p>
+              <div class="form-grid">
+                <label>
+                  Coupon code
+                  <input name="couponCode" type="text" placeholder="SWEET10" required />
+                </label>
+                <label>
+                  Discount type
+                  <select name="couponType">
+                    <option value="percent">Percent (%)</option>
+                    <option value="flat">Flat (Rs.)</option>
+                  </select>
+                </label>
+                <label>
+                  Discount value
+                  <input name="couponValue" type="number" min="1" step="1" required />
+                </label>
+                <label>
+                  Minimum order (Rs., 0 = none)
+                  <input name="couponMin" type="number" min="0" step="1" value="0" />
+                </label>
+              </div>
+              <div class="coupon-form-actions">
+                <button class="primary-button" type="submit">Add coupon</button>
+                <button class="ghost-button" id="couponReset" type="button">Clear form</button>
+              </div>
+              <p class="form-note" id="couponMessage" role="status"></p>
+              <div class="coupon-manage-list" id="couponList"></div>
+            </form>
+
             <form class="admin-card stack-form settings-form" id="settingsForm">
               <p class="eyebrow">Website settings</p>
               <h2>Bakery and email setup</h2>
@@ -365,7 +398,7 @@
       </section>
     </main>
 
-    <script src="../js/data.js?v=20260920-sync1"></script>
-    <script src="../js/admin.js?v=20260920-sync1"></script>
+    <script src="../js/data.js?v=20260924g"></script>
+    <script src="../js/admin.js?v=20260924d"></script>
   </body>
 </html>
