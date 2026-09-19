@@ -617,6 +617,17 @@ main {
   grid-column: 1 / -1;
 }
 
+/* Admin product-list search sits above the list inside its card */
+.admin-product-search {
+  width: 100%;
+  max-width: none;
+  margin: 0 0 14px;
+}
+
+.admin-product-search input {
+  flex: 1;
+}
+
 .sr-only {
   position: absolute;
   width: 1px;

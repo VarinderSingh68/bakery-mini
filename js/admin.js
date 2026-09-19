@@ -7,6 +7,7 @@
   let currentProductImage = "";
   let currentSpecialImage = "";
   let currentBannerImage = "";
+  let productSearchQuery = "";
 
   const newProductColors = [
     ["#b23a48", "#fff1f3", "#80303b"],
@@ -30,6 +31,7 @@
     productFormTitle: document.getElementById("productFormTitle"),
     clearProductForm: document.getElementById("clearProductForm"),
     productList: document.getElementById("productList"),
+    productSearch: document.getElementById("productSearch"),
     variantEditor: document.getElementById("variantEditor"),
     addVariant: document.getElementById("addVariant"),
     productImagePreview: document.getElementById("productImagePreview"),
@@ -101,6 +103,7 @@
     });
     elements.productForm.elements.imageUrl.addEventListener("input", handleProductImageUrlInput);
     elements.productList.addEventListener("click", handleProductListClick);
+    elements.productSearch.addEventListener("input", handleProductSearchInput);
 
     elements.categoryForm.addEventListener("submit", handleCategorySubmit);
     elements.categoryList.addEventListener("click", handleCategoryClick);
@@ -498,13 +501,31 @@
     setFormMessage(elements.productFormMessage, result.warning || `"${product.name}" saved.`);
   }
 
+  function getFilteredProducts() {
+    const query = productSearchQuery.trim().toLowerCase();
+    if (!query) {
+      return data.products;
+    }
+    return data.products.filter(
+      (product) =>
+        product.name.toLowerCase().includes(query) ||
+        product.category.toLowerCase().includes(query)
+    );
+  }
+
   function renderProductList() {
     if (!data.products.length) {
       elements.productList.innerHTML = `<div class="empty-state"><strong>No cakes yet</strong><p>Add your first product with the form.</p></div>`;
       return;
     }
 
-    elements.productList.innerHTML = data.products
+    const visibleProducts = getFilteredProducts();
+    if (!visibleProducts.length) {
+      elements.productList.innerHTML = `<div class="empty-state"><strong>No matches</strong><p>No product matches "${dataApi.escapeHtml(productSearchQuery)}". Try another name or category.</p></div>`;
+      return;
+    }
+
+    elements.productList.innerHTML = visibleProducts
       .map((product) => {
         const prices = product.variants.map((variant) => dataApi.formatPrice(variant.price)).join(", ");
         return `
@@ -524,6 +545,11 @@
         `;
       })
       .join("");
+  }
+
+  function handleProductSearchInput(event) {
+    productSearchQuery = event.target.value;
+    renderProductList();
   }
 
   function handleProductListClick(event) {

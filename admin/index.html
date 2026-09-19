@@ -10,7 +10,7 @@
       href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=Manrope:wght@400..800&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="../css/styles.css?v=20260924d" />
+    <link rel="stylesheet" href="../css/styles.css?v=20260924ah" />
   </head>
   <body data-page="admin">
     <main class="admin-shell">
@@ -154,6 +154,10 @@
                     <h2>Product list</h2>
                   </div>
                 </div>
+                <label class="catalog-search admin-product-search" for="productSearch">
+                  <span aria-hidden="true">🔍</span>
+                  <input id="productSearch" name="productSearch" type="search" placeholder="Search by name or category..." autocomplete="off" />
+                </label>
                 <div class="item-list" id="productList"></div>
               </div>
             </div>
@@ -399,6 +403,6 @@
     </main>
 
     <script src="../js/data.js?v=20260924ah"></script>
-    <script src="../js/admin.js?v=20260924d"></script>
+    <script src="../js/admin.js?v=20260924ah"></script>
   </body>
 </html>
