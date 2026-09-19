@@ -608,7 +608,7 @@
         "Butterscotch",
         "Oreo",
         "KitKat",
-        "Mix Fruit",
+        "Fresh Fruit Cakes",
         "Truffle",
         "Biscoff",
         "Black Forest",
@@ -753,7 +753,7 @@
     "Butterscotch",
     "Oreo",
     "KitKat",
-    "Mix Fruit",
+    "Fresh Fruit Cakes",
     "Truffle",
     "Biscoff",
     "Black Forest",
@@ -813,7 +813,7 @@
     if (text.includes("oreo")) { return "Oreo"; }
     if (text.includes("kitkat") || text.includes("kit kat")) { return "KitKat"; }
     if (text.includes("butterscotch") || text.includes("butter scotch")) { return "Butterscotch"; }
-    if (text.includes("mixfruit") || text.includes("mix fruit") || text.includes("mixed fruit")) { return "Mix Fruit"; }
+    if (text.includes("mixfruit") || text.includes("mix fruit") || text.includes("mixed fruit")) { return "Fresh Fruit Cakes"; }
     if (text.includes("chocolat") || text.includes("choco")) { return "Chocolate"; }
     if (text.includes("truffle")) { return "Truffle"; }
     return null;
@@ -1080,7 +1080,7 @@
   // fancy variants (e.g. Pineapple Sunshine) are separate items and stay.
   const BASE_CAKE_MENU_ITEMS = [
     { id: "basecakemenu-pineapple", name: "Pineapple Cake", category: "Pineapple", description: "Classic soft pineapple cake with cream and pineapple chunks.", variants: [{ kg: "0.5 kg", price: 450 }, { kg: "1 kg", price: 850 }] },
-    { id: "basecakemenu-mix-fruit", name: "Mix Fruit Cake", category: "Mix Fruit", description: "Fresh seasonal fruits over light whipped cream.", variants: [{ kg: "0.5 kg", price: 550 }, { kg: "1 kg", price: 950 }] },
+    { id: "basecakemenu-mix-fruit", name: "Mix Fruit Cake", category: "Fresh Fruit Cakes", description: "Fresh seasonal fruits over light whipped cream.", variants: [{ kg: "0.5 kg", price: 550 }, { kg: "1 kg", price: 950 }] },
     { id: "basecakemenu-butterscotch", name: "Butterscotch Cake", category: "Butterscotch", description: "Crunchy praline and caramel cream in every bite.", variants: [{ kg: "0.5 kg", price: 450 }, { kg: "1 kg", price: 850 }] },
     { id: "basecakemenu-blueberry", name: "Blueberry Cake", category: "Blueberry", description: "Soft vanilla cream layered with blueberry compote.", variants: [{ kg: "0.5 kg", price: 450 }, { kg: "1 kg", price: 850 }] },
     { id: "basecakemenu-raspberry", name: "Raspberry Cake", category: "Raspberry", description: "Tangy raspberry filling with silky cream.", variants: [{ kg: "0.5 kg", price: 450 }, { kg: "1 kg", price: 850 }] },
@@ -1318,12 +1318,12 @@
   const LEGACY_CATEGORY_REFILE_V1 = {
     // Cream Cakes -> White Forest / Truffle / Rasmalai
     "cake-023": "White Forest", "cake-045": "Truffle", "cake-046": "White Forest",
-    "cake-047": "Rasmalai", "cake-048": "Rasmalai", "cake-049": "Mix Fruit",
+    "cake-047": "Rasmalai", "cake-048": "Rasmalai", "cake-049": "Fresh Fruit Cakes",
     "cake-050": "Rasmalai", "cake-051": "Truffle",
     // Fruit Cakes -> Mix Fruit
-    "cake-016": "Mix Fruit", "cake-024": "Mix Fruit", "cake-039": "Mix Fruit",
-    "cake-040": "Mix Fruit", "cake-041": "Mix Fruit", "cake-042": "Mix Fruit",
-    "cake-043": "Mix Fruit", "cake-044": "Mix Fruit",
+    "cake-016": "Fresh Fruit Cakes", "cake-024": "Fresh Fruit Cakes", "cake-039": "Fresh Fruit Cakes",
+    "cake-040": "Fresh Fruit Cakes", "cake-041": "Fresh Fruit Cakes", "cake-042": "Fresh Fruit Cakes",
+    "cake-043": "Fresh Fruit Cakes", "cake-044": "Fresh Fruit Cakes",
     // Celebration Cakes -> Rasmalai (mithai) / Customized Cakes (party) / Butterscotch (nutty)
     "cake-015": "Rasmalai", "cake-017": "Customized Cakes", "cake-025": "Customized Cakes",
     "cake-052": "Butterscotch", "cake-053": "Customized Cakes", "cake-054": "Customized Cakes",
@@ -1346,6 +1346,60 @@
       }
     });
     return true;
+  }
+
+  // "Mix Fruit" and "Fresh Fruit Cakes" are the same shelf to the owner:
+  // fold every Mix Fruit item into the single Fresh Fruit Cakes dropdown.
+  // Runs on EVERY load (idempotent, like the Chocolate Classics fold) so an
+  // old "Mix Fruit" category arriving from the cloud database or a stale
+  // device cache can never reappear as a separate dropdown.
+  const MIX_FRUIT_LEGACY_NAMES = ["mix fruit", "mixfruit", "mixed fruit"];
+
+  function mergeMixFruitIntoFreshFruit(products) {
+    let changed = false;
+    products.forEach((product) => {
+      if (MIX_FRUIT_LEGACY_NAMES.includes(String(product.category || "").trim().toLowerCase())) {
+        product.category = "Fresh Fruit Cakes";
+        changed = true;
+      }
+    });
+    return changed;
+  }
+
+  // The folded category takes over Mix Fruit's exact slot in the saved
+  // lineup (between KitKat and Truffle), instead of being appended at the
+  // end. Idempotent; runs before the legacy-name filter.
+  function foldMixFruitCategorySlot(categories) {
+    if (!Array.isArray(categories)) { return false; }
+    let changed = false;
+    for (let i = categories.length - 1; i >= 0; i--) {
+      if (MIX_FRUIT_LEGACY_NAMES.includes(String(categories[i] || "").trim().toLowerCase())) {
+        if (categories.includes("Fresh Fruit Cakes")) {
+          categories.splice(i, 1);
+        } else {
+          categories[i] = "Fresh Fruit Cakes";
+        }
+        changed = true;
+      }
+    }
+    // Already-folded data (an earlier load appended Fresh Fruit Cakes at
+    // the end): pull it into Mix Fruit's old slot once the canonical
+    // KitKat -> Truffle neighborship is still intact. Self-limiting - the
+    // owner's later reordering breaks the pattern and stops the move.
+    const ffcIdx = categories.indexOf("Fresh Fruit Cakes");
+    const kitkatIdx = categories.indexOf("KitKat");
+    if (
+      ffcIdx !== -1 &&
+      kitkatIdx !== -1 &&
+      ffcIdx !== kitkatIdx + 1 &&
+      categories[kitkatIdx + 1] === "Truffle"
+    ) {
+      categories.splice(ffcIdx, 1);
+      const kk = categories.indexOf("KitKat");
+      categories.splice(kk + 1, 0, "Fresh Fruit Cakes");
+      changed = true;
+    }
+    return changed;
   }
 
   // "Chocolate Classics" and "Chocolate" are the same thing to the owner:
@@ -1504,6 +1558,11 @@
     migratedCategories = migratedCategories.filter(
       (name) => !CHOCO_LEGACY_CATEGORY_NAMES.includes(String(name).trim().toLowerCase())
     );
+    // Mix Fruit folded into Fresh Fruit Cakes - same every-load guarantee.
+    foldMixFruitCategorySlot(migratedCategories);
+    migratedCategories = migratedCategories.filter(
+      (name) => !MIX_FRUIT_LEGACY_NAMES.includes(String(name).trim().toLowerCase())
+    );
     const addonMenuAdded = injectAddonMenu(products, settings);
     applyAddonPriceFixes(products, settings);
     const savouryMenuAdded = injectSavouryMenu(products, settings);
@@ -1515,6 +1574,7 @@
     const cakePopsAdded = injectCakePopsDefault(products, settings);
     refileLegacyCategories(products, settings);
     mergeChocolateClassics(products);
+    mergeMixFruitIntoFreshFruit(products);
     applyCakePhotos(products);
     applySavouryPriceFixes(products, settings);
     applyFlavorOrganization(products);
