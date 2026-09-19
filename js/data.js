@@ -1209,6 +1209,26 @@
     return added;
   }
 
+  function injectCakePopsDefault(products, settings) {
+    if (settings && settings.cakePopsV1) {
+      return false;
+    }
+    const exists = products.some((product) => product.id === "addon-cake-pops");
+    if (!exists) {
+      products.push({
+        id: "addon-cake-pops",
+        name: "Cake Pops",
+        category: "Add-ons",
+        description: "Six bite-size cake pops for the dessert table.",
+        details: "",
+        image: "",
+        active: true,
+        variants: [{ kg: "6 pcs", price: 240 }]
+      });
+    }
+    return true;
+  }
+
   function injectBaseCakes(products, settings) {
     if (settings && settings.baseCakesV1) {
       return false;
@@ -1427,7 +1447,10 @@
     "oreo brownie": "images/oreo-brownie.jpg",
     "kitkat brownie": "images/kitkat-brownie.jpg",
     "biscoff brownie": "images/biscoff-brownie.jpg",
-    "vanilla tuti fruity": "images/vanilla-tuti-fruity.jpg"
+    "vanilla tuti fruity": "images/vanilla-tuti-fruity.jpg",
+    "cake pops": "images/cake-pops.jpg",
+    "pineapple tub cake": "images/pineapple-tub.jpg",
+    "fruit cream": "images/fruit-cream.jpg"
   };
 
   function applyCakePhotos(products) {
@@ -1489,6 +1512,7 @@
     const baseCakesAdded = injectBaseCakes(products, settings);
     const chocoMenuAdded = injectChocoMenu(products, settings);
     const slicesTubsAdded = injectCheeseSlicesAndTubs(products, settings);
+    const cakePopsAdded = injectCakePopsDefault(products, settings);
     refileLegacyCategories(products, settings);
     mergeChocolateClassics(products);
     applyCakePhotos(products);
@@ -1514,6 +1538,7 @@
         baseCakesV1: Boolean(settings.baseCakesV1) || baseCakesAdded,
         chocoMenuV1: Boolean(settings.chocoMenuV1) || chocoMenuAdded,
         slicesTubsV1: Boolean(settings.slicesTubsV1) || slicesTubsAdded,
+        cakePopsV1: Boolean(settings.cakePopsV1) || cakePopsAdded,
         refileLegacyCatsV1: true, // refile + dropdown removal apply on first load with this version
         savouryPriceV2: true, // price fixes apply once on first load with this version
         bakeryName:
