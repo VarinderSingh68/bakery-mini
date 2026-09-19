@@ -826,9 +826,12 @@
     // name-based filing - their categories are set explicitly at injection
     // (Blueberry Tub Cake stays in Add-ons; Blueberry Bento in Blueberry;
     // Blueberry Cheese Cake Slice in Cheese Cake).
+    // Anything saved through the admin Product form is exempt too
+    // (categoryLocked) - the category picked there is final and must never
+    // be silently swapped for a flavor guessed from the item's name.
     products.forEach((product) => {
       const id = String(product.id || "");
-      if (id.includes("menu-")) {
+      if (id.includes("menu-") || product.categoryLocked) {
         return;
       }
       const flavor = flavorCategoryForName(product.name);

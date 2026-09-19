@@ -482,7 +482,9 @@
       accent: colorSet[0],
       frosting: colorSet[1],
       cakeColor: colorSet[2],
-      active: form.elements.active.checked
+      active: form.elements.active.checked,
+      // The category typed/picked here is final - never re-filed by name.
+      categoryLocked: true
     };
 
     if (existing) {
