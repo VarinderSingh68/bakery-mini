@@ -1424,7 +1424,10 @@
     "chocolate orange zest": "images/chocolate-orange-zest.jpg",
     "chocolate oreo tub cake": "images/oreo-tub.jpg",
     "tiramisu tub cake": "images/tiramisu-tub.jpg",
-    "oreo brownie": "images/oreo-brownie.jpg"
+    "oreo brownie": "images/oreo-brownie.jpg",
+    "kitkat brownie": "images/kitkat-brownie.jpg",
+    "biscoff brownie": "images/biscoff-brownie.jpg",
+    "vanilla tuti fruity": "images/vanilla-tuti-fruity.jpg"
   };
 
   function applyCakePhotos(products) {
