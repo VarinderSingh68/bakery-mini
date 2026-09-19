@@ -584,7 +584,7 @@
       settings: {
         bakeryName: "Premium Cakes",
         ownerEmail: "ngw.designer@gmail.com",
-        phone: "+91 98765 43210",
+        phone: "+91 90414 75757",
         address: "Cake Street, Your City",
         adminPasscode: "owner123",
         coupons: [

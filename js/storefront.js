@@ -206,8 +206,8 @@
 
     // Keep the Contact Us sheet and FAB synced to the owner number from settings.
     const digits = (settings.phone || "").replace(/\D/g, "");
-    const tel = digits ? `tel:+${digits}` : "tel:+919876665757";
-    const wa = digits ? `https://wa.me/${digits}` : "https://wa.me/919876665757";
+    const tel = digits ? `tel:+${digits}` : "tel:+919041475757";
+    const wa = digits ? `https://wa.me/${digits}` : "https://wa.me/919041475757";
     elements.contactCall.href = tel;
     elements.contactWhatsapp.href = wa;
     elements.contactCallNumber.textContent = settings.phone || "";
