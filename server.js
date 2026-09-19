@@ -31,6 +31,16 @@ function requiredEnv(name) {
   return value;
 }
 
+// The owner's real WhatsApp number (country code + number, digits only).
+// Used whenever OWNER_WHATSAPP_NUMBER is missing/invalid so invoices always
+// have somewhere to go.
+const DEFAULT_OWNER_WHATSAPP = "919041475757";
+
+function resolveOwnerWhatsAppNumber() {
+  const digits = normalizePhone(process.env.OWNER_WHATSAPP_NUMBER);
+  return digits.length >= 10 ? digits : DEFAULT_OWNER_WHATSAPP;
+}
+
 function normalizePhone(value) {
   return String(value || "").replace(/[^\d]/g, "");
 }
@@ -47,7 +57,7 @@ function createInvoicePdf(order) {
     document.on("end", () => resolve(Buffer.concat(chunks)));
     document.on("error", reject);
 
-    document.fontSize(24).fillColor("#9f3449").text("Well Baked");
+    document.fontSize(24).fillColor("#9f3449").text("Premium Cakes");
     document.moveDown(0.4);
     document.fontSize(18).fillColor("#222222").text("Order Invoice");
     document.moveDown();
@@ -150,15 +160,15 @@ async function uploadPdf(pdf) {
 }
 
 async function deliverOrderOnWhatsApp(order, pdf) {
-  const ownerNumber = requiredEnv("OWNER_WHATSAPP_NUMBER");
-  const customerNumber = order.customer.whatsapp || order.customer.phone;
+  const ownerNumber = resolveOwnerWhatsAppNumber();
+  const customerNumber = normalizePhone(order.customer.whatsapp || order.customer.phone);
   const ownerTemplate = requiredEnv("WHATSAPP_OWNER_TEMPLATE");
   const customerTemplate = requiredEnv("WHATSAPP_CUSTOMER_TEMPLATE");
   const mediaId = await uploadPdf(pdf);
   const details = `${order.id} | ${order.customer.name} | ${money(order.total)}`;
   await Promise.all([
     sendWhatsAppMessage(customerNumber, customerTemplate, [order.customer.name, order.id]),
-    sendWhatsAppDocument(customerNumber, mediaId, "Your Well Baked invoice"),
+    sendWhatsAppDocument(customerNumber, mediaId, "Your Premium Cakes invoice"),
     sendWhatsAppMessage(ownerNumber, ownerTemplate, [order.id, order.customer.name, order.customer.phone, money(order.total), details]),
     sendWhatsAppDocument(ownerNumber, mediaId, "New bakery order invoice")
   ]);
@@ -352,7 +362,7 @@ app.post("/api/orders", async (request, response) => {
     await pool.query("UPDATE orders SET pdf_sent = TRUE WHERE id = $1", [order.id]);
     response.status(201).json({ saved: true, whatsappSent: true, orderId: order.id });
   } catch (error) {
-    console.error("Order delivery failed", error);
+    console.error("Order WhatsApp delivery failed:", error && error.message ? error.message : error);
     response.status(502).json({ saved: true, whatsappSent: false, orderId: order.id, error: error.message });
   }
 });

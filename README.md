@@ -53,7 +53,9 @@ Set these Render environment variables before testing orders:
 
 - `WHATSAPP_ACCESS_TOKEN`: Meta WhatsApp Cloud API permanent access token
 - `WHATSAPP_PHONE_NUMBER_ID`: Meta WhatsApp sender phone number ID
-- `OWNER_WHATSAPP_NUMBER`: owner WhatsApp number with country code
+- `OWNER_WHATSAPP_NUMBER`: owner WhatsApp number with country code. If unset
+  or invalid, delivery falls back to the site's owner number **919041475757**
+  (+91 9041475757).
 - `WHATSAPP_CUSTOMER_TEMPLATE`: approved customer template name
 - `WHATSAPP_OWNER_TEMPLATE`: approved owner template name
 - `WHATSAPP_TEMPLATE_LANGUAGE`: template language code, normally `en_US`

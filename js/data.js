@@ -584,7 +584,7 @@
       settings: {
         bakeryName: "Premium Cakes",
         ownerEmail: "ngw.designer@gmail.com",
-        phone: "+91 90414 75757",
+        phone: "+91 9041475757",
         address: "Cake Street, Your City",
         adminPasscode: "owner123",
         coupons: [
@@ -1530,6 +1530,28 @@
     return changed;
   }
 
+  // The owner's real number, exactly as it must appear site-wide.
+  const DEFAULT_OWNER_PHONE = "+91 9041475757";
+  const DEFAULT_OWNER_PHONE_DIGITS = "919041475757";
+  // Old demo/placeholder numbers that must never reach the Contact sheet,
+  // footer, or WhatsApp links.
+  const STALE_PLACEHOLDER_PHONES = ["919876543210", "9876543210"];
+
+  function normalizeStoredPhone(value) {
+    const digits = String(value || "").replace(/\D/g, "");
+    // Empty or a stale placeholder number self-heals to the real owner
+    // number on EVERY load, so phones and cloud snapshots fix themselves.
+    if (!digits || STALE_PLACEHOLDER_PHONES.includes(digits)) {
+      return DEFAULT_OWNER_PHONE;
+    }
+    // Any formatting of the correct number displays identically.
+    if (digits === DEFAULT_OWNER_PHONE_DIGITS || digits === "9041475757") {
+      return DEFAULT_OWNER_PHONE;
+    }
+    // A deliberately saved different number (admin panel) is respected.
+    return String(value).trim();
+  }
+
   function normalizeData(input) {
     const defaults = getDefaultData();
     const data = input && typeof input === "object" ? input : {};
@@ -1589,6 +1611,7 @@
       settings: {
         ...defaults.settings,
         ...settings,
+        phone: normalizeStoredPhone(settings.phone),
         coupons: sanitizeCoupons(settings.coupons, defaults.settings.coupons),
         addonMenuV1: Boolean(settings.addonMenuV1) || addonMenuAdded,
         addonPriceV2: true, // price fixes apply once on first load with this version
