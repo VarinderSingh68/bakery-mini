@@ -1935,6 +1935,37 @@
       .join("\n");
   }
 
+  // Emails have no page origin, so a relative /api/images/<id> URL must
+  // become an absolute https://... link before it can be embedded. Data
+  // URIs and already-absolute links pass through unchanged.
+  function absoluteImageUrl(rawUrl) {
+    if (!rawUrl) { return ""; }
+    if (rawUrl.startsWith("data:") || /^https?:\/\//i.test(rawUrl)) {
+      return rawUrl;
+    }
+    if (typeof window !== "undefined" && window.location && window.location.origin) {
+      try {
+        return new URL(rawUrl, window.location.origin).toString();
+      } catch (error) {
+        return rawUrl;
+      }
+    }
+    return rawUrl;
+  }
+
+  // Order items only store a productId/specialId, not a photo - look the
+  // real product or special up in the catalog to find its image.
+  function emailItemImageUrl(item, data) {
+    let source = null;
+    if (item.productId) {
+      source = (data.products || []).find((product) => product.id === item.productId);
+    }
+    if (!source && item.specialId) {
+      source = (data.specials || []).find((special) => special.id === item.specialId);
+    }
+    return absoluteImageUrl(getProductImage(source || { name: item.name }));
+  }
+
   function buildEmailParams(order, data) {
     const itemsText = order.items
       .map((item) => {
@@ -1942,6 +1973,27 @@
         return `${label} (${item.kg}) x ${item.qty} = ${formatPrice(item.lineTotal)}`;
       })
       .join("\n");
+    // HTML rows for the {{items}} merge field - EmailJS templates can't loop,
+    // so the full "photo + name + qty + price" table body is built here and
+    // dropped in as one ready-made block.
+    const itemsHtml = order.items
+      .map((item) => {
+        const label = item.specialTitle ? `${item.name} - ${item.specialTitle}` : item.name;
+        const image = emailItemImageUrl(item, data);
+        return (
+          '<tr>' +
+          '<td style="padding:10px 0;border-bottom:1px solid #f1ece7;width:64px;">' +
+          '<img src="' + escapeHtml(image) + '" width="56" height="56" alt="' + escapeHtml(label) + '" ' +
+          'style="width:56px;height:56px;object-fit:cover;border-radius:8px;display:block;" /></td>' +
+          '<td style="padding:10px 12px;border-bottom:1px solid #f1ece7;font-size:14px;color:#3a2a22;">' +
+          '<strong>' + escapeHtml(label) + '</strong><br />' +
+          '<span style="color:#8a6a55;font-size:13px;">' + escapeHtml(item.kg) + ' &times; ' + item.qty + '</span></td>' +
+          '<td style="padding:10px 0;border-bottom:1px solid #f1ece7;font-size:14px;text-align:right;white-space:nowrap;color:#3a2a22;">' +
+          formatPrice(item.lineTotal) + '</td>' +
+          '</tr>'
+        );
+      })
+      .join("");
     const customerDetails = [
       `Name: ${order.customer.name}`,
       `Email: ${order.customer.email}`,
@@ -1975,7 +2027,7 @@
       delivery_date: order.customer.deliveryDate,
       instructions: order.customer.instructions || "None",
       payment_method: order.paymentMethod,
-      items: itemsText,
+      items: itemsHtml,
       order_total: formatPrice(order.total),
       customer_details: customerDetails,
       order_details: orderDetails,
