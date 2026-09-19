@@ -1275,6 +1275,16 @@
       deliveryMessage = result.whatsappSent
         ? "Your invoice was sent to WhatsApp. We will contact you very soon."
         : "Your order was saved, but WhatsApp delivery is not configured yet.";
+      // The backend save succeeding only means WhatsApp/the order record is
+      // handled - it does not send any email. Previously the customer/owner
+      // emails were only ever sent from the catch block below (i.e. only
+      // when the backend save FAILED), so on a normal working order no email
+      // was ever sent. Always attempt the emails too, on every order.
+      try {
+        await dataApi.sendOrderEmails(order, data);
+      } catch (emailError) {
+        console.error("Order confirmation email failed", emailError);
+      }
     } catch (error) {
       data = dataApi.load();
       data.orders = [order, ...(data.orders || [])];
