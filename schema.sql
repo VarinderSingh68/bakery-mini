@@ -18,3 +18,12 @@ CREATE TABLE IF NOT EXISTS app_state (
   value JSONB NOT NULL,
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+-- Admin-uploaded product photos live here (as data URLs), NOT inside the
+-- catalog blob. Browser storage is ~5 MB total; keeping photos on the server
+-- means editing one item can never push other items' photos out.
+CREATE TABLE IF NOT EXISTS app_images (
+  id TEXT PRIMARY KEY,
+  value TEXT NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);

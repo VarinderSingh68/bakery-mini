@@ -70,7 +70,7 @@
 
   function init() {
     bindEvents();
-    migrateStoredImages();
+    migrateStoredImages().then(() => migrateEmbeddedImagesToServer());
     resetProductForm();
     resetSpecialForm();
     resetBannerForm();
@@ -1157,10 +1157,85 @@
         if (chosen.length > 1024 * 1024) {
           alert("This image is still very large after compression and may not save. Try a different photo, or use an image link (URL) instead of an upload.");
         }
-        onLoad(chosen);
+        // Prefer server storage: photos kept on the server never compete
+        // with the catalog for the ~5 MB localStorage, so editing one item
+        // can no longer overflow storage and evict other items' photos.
+        // Falls back to the compressed data URL when the server is
+        // unreachable so the edit still works offline.
+        uploadImageToServer(chosen).then((url) => onLoad(url || chosen));
       });
     });
     reader.readAsDataURL(file);
+  }
+
+  async function uploadImageToServer(dataUrl) {
+    try {
+      const response = await fetch("/api/images", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ image: dataUrl })
+      });
+      if (!response.ok) {
+        return null;
+      }
+      const body = await response.json();
+      if (!body?.ok || typeof body.url !== "string") {
+        return null;
+      }
+      // Round-trip verify the photo actually serves before trusting it.
+      const check = await fetch(body.url, { cache: "no-store" });
+      return check.ok ? body.url : null;
+    } catch (error) {
+      return null;
+    }
+  }
+
+  async function migrateEmbeddedImagesToServer() {
+    // One-time upgrade: photos previously saved as base64 inside browser
+    // storage move to permanent server storage (only when the durable
+    // database is connected), freeing localStorage so saves never prune
+    // other items' photos. File-path images (images/...) are never touched.
+    try {
+      const health = await fetch("/api/health", { cache: "no-store" });
+      if (!health.ok) {
+        return;
+      }
+      const status = await health.json();
+      if (!status?.databaseConfigured) {
+        return; // never migrate into the temporary disk store
+      }
+
+      const targets = [];
+      [data.products, data.specials, data.banners].forEach((items) => {
+        items.forEach((item) => {
+          if (item && typeof item.image === "string" && item.image.startsWith("data:image/")) {
+            targets.push(item);
+          }
+        });
+      });
+      if (!targets.length) {
+        return;
+      }
+
+      let migrated = 0;
+      for (const item of targets) {
+        const url = await uploadImageToServer(item.image);
+        if (url) {
+          item.image = url;
+          migrated += 1;
+        }
+      }
+      if (migrated) {
+        const result = dataApi.save(data);
+        if (result.ok) {
+          console.info(`Bakery admin: moved ${migrated} uploaded photo(s) to permanent server storage.`);
+          refreshAll();
+          publishCatalog("Photos upgraded to permanent server storage.");
+        }
+      }
+    } catch (error) {
+      console.warn("Bakery admin: photo storage upgrade skipped.", error);
+    }
   }
 
   function recompressStoredImage(dataUrl) {
@@ -1202,10 +1277,10 @@
       });
     });
     if (!jobs.length) {
-      return;
+      return Promise.resolve();
     }
     console.info(`Bakery admin: shrinking ${jobs.length} oversized stored image(s)...`);
-    Promise.all(jobs).then(() => {
+    return Promise.all(jobs).then(() => {
       if (!changed) {
         return;
       }

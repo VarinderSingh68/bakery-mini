@@ -249,6 +249,74 @@ app.put("/api/catalog", async (request, response) => {
   }
 });
 
+// --- Admin image storage -------------------------------------------------
+// Uploaded photos are stored here (database on Render, disk locally) and
+// referenced from the catalog by short /api/images/<id> URLs. This keeps big
+// base64 photos out of localStorage (~5 MB), so editing one item can never
+// overflow storage and evict other items' images.
+
+const IMAGE_DATA_PREFIX = "data:image/";
+const IMAGE_MAX_BYTES = 6 * 1024 * 1024; // matches the JSON body limit with headroom
+
+async function readImageRecord(id) {
+  if (!pool) {
+    try {
+      const dir = path.join(rootDir, ".data", "images");
+      const safe = String(id).replace(/[^a-z0-9_-]/gi, "");
+      return JSON.parse(await fs.readFile(path.join(dir, `${safe}.json`), "utf8"));
+    } catch (error) {
+      if (error.code === "ENOENT") { return null; }
+      throw error;
+    }
+  }
+  const result = await pool.query("SELECT value FROM app_images WHERE id = $1", [String(id)]);
+  return result.rows[0]?.value ?? null;
+}
+
+async function writeImageRecord(id, dataUrl) {
+  if (!pool) {
+    const dir = path.join(rootDir, ".data", "images");
+    await fs.mkdir(dir, { recursive: true });
+    const safe = String(id).replace(/[^a-z0-9_-]/gi, "");
+    await fs.writeFile(path.join(dir, `${safe}.json`), JSON.stringify(dataUrl), "utf8");
+    return;
+  }
+  await pool.query(
+    `INSERT INTO app_images (id, value) VALUES ($1, $2)
+     ON CONFLICT (id) DO UPDATE SET value = $2, created_at = NOW()`,
+    [String(id), dataUrl]
+  );
+}
+
+app.post("/api/images", async (request, response) => {
+  const dataUrl = request.body?.image;
+  if (typeof dataUrl !== "string" || !dataUrl.startsWith(IMAGE_DATA_PREFIX) || dataUrl.length > IMAGE_MAX_BYTES) {
+    return response.status(400).json({ error: "Invalid image payload." });
+  }
+  const id = `img_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
+  try {
+    await writeImageRecord(id, dataUrl);
+    response.status(201).json({ ok: true, url: `/api/images/${id}` });
+  } catch (error) {
+    console.error("Image save failed", error);
+    response.status(500).json({ error: "Image could not be saved." });
+  }
+});
+
+app.get("/api/images/:id", async (request, response) => {
+  try {
+    const record = await readImageRecord(request.params.id);
+    if (!record || typeof record !== "string" || !record.startsWith(IMAGE_DATA_PREFIX)) {
+      return response.status(404).type("text/plain").send("Not found");
+    }
+    response.setHeader("Cache-Control", "public, max-age=31536000, immutable");
+    response.type("image/jpeg").send(Buffer.from(record.split(",")[1] || "", "base64"));
+  } catch (error) {
+    console.error("Image lookup failed", error);
+    response.status(500).type("text/plain").send("Image could not be loaded.");
+  }
+});
+
 app.get("/api/health", async (_request, response) => {
   response.json({ ok: true, databaseConfigured: Boolean(pool), catalogStore: catalogStoreName() });
 });
