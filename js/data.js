@@ -583,7 +583,7 @@
       ],
       settings: {
         bakeryName: "Premium Cakes",
-        ownerEmail: "ngw.designer@gmail.com",
+        ownerEmail: "chandigarhcakeclub@gmail.com",
         phone: "+91 9041475757",
         address: "Cake Street, Your City",
         adminPasscode: "owner123",
