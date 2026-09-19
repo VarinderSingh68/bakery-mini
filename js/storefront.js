@@ -863,18 +863,60 @@
     }
   }
 
+  // Cart suggestions come from the REAL admin-managed Add-ons category,
+  // capped to a short curated list. Preferred picks first (by name,
+  // case-insensitive), then the rest of the category until 6. Items already
+  // in the cart or hidden by the owner drop out automatically.
+  const CART_SUGGESTION_LIMIT = 6;
+  const CART_SUGGESTION_PREFERRED = [
+    "party popper",
+    "spark candle",
+    "number candle",
+    "happy birthday banner",
+    "simple birthday cap",
+    "acrylic cake topper large"
+  ];
+
+  function cartSuggestions() {
+    const pool = data.products.filter((product) => String(product.category || "").trim().toLowerCase() === "add-ons" && product.active !== false);
+    const inCart = new Set(cart.filter((item) => item.productId).map((item) => item.productId));
+    const picked = [];
+    const used = new Set();
+    const take = (product) => {
+      if (!product || used.has(product.id) || inCart.has(product.id) || picked.length >= CART_SUGGESTION_LIMIT) {
+        return;
+      }
+      used.add(product.id);
+      picked.push(product);
+    };
+    CART_SUGGESTION_PREFERRED.forEach((name) => {
+      take(pool.find((product) => String(product.name || "").trim().toLowerCase() === name));
+    });
+    pool.forEach(take);
+    return picked;
+  }
+
   function renderAddOns() {
-    const addOns = (data.addOns || []).filter((addOn) => addOn.active !== false);
-    elements.addonList.innerHTML = addOns
+    if (!elements.addonList) {
+      return;
+    }
+    const suggestions = cartSuggestions();
+    if (!suggestions.length) {
+      elements.addonList.innerHTML = `<p class="addon-empty">All the party extras are already in your cart! 🎉</p>`;
+      return;
+    }
+    elements.addonList.innerHTML = suggestions
       .map((addOn) => {
         const image = dataApi.getProductImage(addOn);
+        const variant = (addOn.variants && addOn.variants[0]) || {};
+        const unit = variant.kg || "1 pc";
         return `
           <article class="addon-card">
             <img src="${dataApi.escapeHtml(image)}" alt="${dataApi.escapeHtml(addOn.name)}" />
             <div class="addon-copy">
               <strong>${dataApi.escapeHtml(addOn.name)}</strong>
-              <p>${dataApi.escapeHtml(addOn.description)}</p>
-              <span>${dataApi.formatPrice(addOn.price)}</span>
+              <p>${dataApi.escapeHtml(addOn.details || addOn.description || "")}</p>
+              <span>${dataApi.formatPrice(Number(variant.price) || 0)} · ${dataApi.escapeHtml(unit)}</span>
             </div>
             <button class="ghost-button small addon-add" type="button" data-addon-id="${dataApi.escapeHtml(addOn.id)}">Add</button>
           </article>
@@ -889,7 +931,10 @@
       return;
     }
 
-    const addOn = (data.addOns || []).find((item) => item.id === button.dataset.addonId);
+    // Suggestion cards carry real Add-ons category products; legacy saved
+    // carts may still reference the old demo addOns array.
+    const addOn = data.products.find((item) => item.id === button.dataset.addonId && String(item.category || "").trim().toLowerCase() === "add-ons")
+      || (data.addOns || []).find((item) => item.id === button.dataset.addonId);
     if (!addOn) {
       return;
     }
@@ -899,14 +944,16 @@
     if (existing) {
       existing.qty += 1;
     } else {
+      const variant = (addOn.variants && addOn.variants[0]) || {};
       cart.push({
         key,
+        productId: addOn.id,
         addonId: addOn.id,
         name: addOn.name,
         addonCategory: "Party extra",
         image: dataApi.getProductImage(addOn),
-        kg: "1 set",
-        price: Number(addOn.price) || 0,
+        kg: variant.kg || "1 pc",
+        price: Number(variant.price) || 0,
         qty: 1
       });
     }
@@ -927,6 +974,7 @@
     elements.cartTotal.textContent = dataApi.formatPrice(total);
     elements.placeOrder.disabled = cart.length === 0;
     renderCouponRow();
+    renderAddOns(); // suggestions refresh with the cart (added items drop out)
     const subtotal = cart.reduce((sum, item) => sum + item.price * item.qty, 0);
     const fee = deliveryFee(Math.max(0, subtotal - (activeCoupon ? (activeCoupon.type === "percent" ? Math.round(subtotal * activeCoupon.value / 100) : activeCoupon.value) : 0)));
     if (elements.cartDelivery) {

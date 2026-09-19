@@ -1418,6 +1418,16 @@ label {
   gap: 8px;
 }
 
+.addon-empty {
+  margin: 0;
+  padding: 10px 12px;
+  border: 1px dashed var(--line);
+  border-radius: 12px;
+  text-align: center;
+  font-size: 0.9rem;
+  color: var(--ink-soft, inherit);
+}
+
 .addon-card {
   display: grid;
   grid-template-columns: 52px minmax(0, 1fr) auto;
