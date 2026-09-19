@@ -205,9 +205,11 @@
     elements.footerContact.textContent = `${settings.phone || ""} ${settings.address ? " | " + settings.address : ""}`;
 
     // Keep the Contact Us sheet and FAB synced to the owner number from settings.
-    const digits = (settings.phone || "").replace(/\D/g, "");
-    const tel = digits ? `tel:+${digits}` : "tel:+919041475757";
-    const wa = digits ? `https://wa.me/${digits}` : "https://wa.me/919041475757";
+    // The hard-coded fallback matches the correct owner number so a settings
+    // snapshot can never surface a stale number in the Contact Us sheet.
+    const digits = (settings.phone || "").replace(/\D/g, "") || "919041475757";
+    const tel = `tel:+${digits}`;
+    const wa = `https://wa.me/${digits}`;
     elements.contactCall.href = tel;
     elements.contactWhatsapp.href = wa;
     elements.contactCallNumber.textContent = settings.phone || "";
