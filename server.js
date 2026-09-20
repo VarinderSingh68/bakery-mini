@@ -492,7 +492,17 @@ app.post("/api/orders", async (request, response) => {
     await pool.query(
       `INSERT INTO orders (id, created_at, status, payment_method, customer, items, total)
        VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-      [order.id, order.createdAt, order.status || "New", order.paymentMethod || "Order payment", order.customer, order.items, order.total]
+      // node-postgres serializes a plain JS array as a Postgres ARRAY literal
+      // (e.g. "{...}"), not as JSON, regardless of the target column type -
+      // so order.items (an array) was silently producing an invalid value for
+      // the jsonb "items" column on every single order ("invalid input
+      // syntax for type json"), and this INSERT was failing every time. The
+      // catch block below still reported {saved:true} on any error, which is
+      // why this went unnoticed: WhatsApp/email still fire from the in-memory
+      // `order` object regardless, but nothing was ever actually persisted.
+      // Explicitly JSON.stringify both jsonb fields so this always inserts
+      // valid JSON no matter what shape the value is.
+      [order.id, order.createdAt, order.status || "New", order.paymentMethod || "Order payment", JSON.stringify(order.customer), JSON.stringify(order.items), order.total]
     );
     const catalogForPdf = await readCatalog().catch(() => null);
     const pdf = await createInvoicePdf(order, catalogForPdf);
