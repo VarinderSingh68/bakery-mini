@@ -122,11 +122,15 @@ async function createInvoicePdf(order, catalog) {
   const addOnEntries = resolvedItems.filter((entry) => /add-?ons?/i.test(entry.category));
   const cakeEntries = resolvedItems.filter((entry) => !/add-?ons?/i.test(entry.category));
 
-  // Photo size for every item row in the PDF (cakes and add-ons alike).
-  const IMAGE_SIZE = 220;
+  // The whole order form is meant to fit on a single page, so the photo
+  // size scales down as the order has more items instead of using one
+  // fixed (and potentially page-busting) size. Kept modest, not huge.
+  const totalItemCount = resolvedItems.length || 1;
+  const IMAGE_SIZE = totalItemCount <= 2 ? 100 : totalItemCount <= 4 ? 80 : totalItemCount <= 6 ? 65 : 52;
+  const ITEM_GAP = totalItemCount <= 4 ? 0.3 : 0.18;
 
   return new Promise((resolve, reject) => {
-    const document = new PDFDocument({ margin: 42, size: "A4" });
+    const document = new PDFDocument({ margin: 36, size: "A4" });
     const chunks = [];
     document.on("data", (chunk) => chunks.push(chunk));
     document.on("end", () => resolve(Buffer.concat(chunks)));
@@ -136,9 +140,10 @@ async function createInvoicePdf(order, catalog) {
     const pageLeft = document.page.margins.left;
     const pageBottom = document.page.height - document.page.margins.bottom;
 
-    // Renders one order item (cake or add-on) as a row: details on the left,
-    // a big real product photo on the right. Starts a fresh page first if
-    // the photo wouldn't fully fit on the current one.
+    // Renders one order item (cake or add-on) as a compact row: details on
+    // the left, a real product photo on the right. Only falls back to a new
+    // page if the row genuinely can't fit - the sizing above is chosen so
+    // that doesn't normally happen for a typical order.
     function renderItemRow(entry, index, { showFlavour }) {
       const item = entry.item;
       const label = item.specialTitle ? `${item.name} - ${item.specialTitle}` : item.name;
@@ -150,10 +155,10 @@ async function createInvoicePdf(order, catalog) {
       }
 
       const startY = document.y;
-      const textWidth = hasImage ? pageRight - pageLeft - imageSize - 16 : pageRight - pageLeft;
+      const textWidth = hasImage ? pageRight - pageLeft - imageSize - 12 : pageRight - pageLeft;
 
-      document.fontSize(11).fillColor("#3a2a22").text(`${index + 1}. ${label}`, pageLeft, startY, { width: textWidth });
-      document.fontSize(9).fillColor("#6a5344");
+      document.fontSize(10).fillColor("#3a2a22").text(`${index + 1}. ${label}`, pageLeft, startY, { width: textWidth });
+      document.fontSize(8).fillColor("#6a5344");
       if (showFlavour && entry.category) {
         document.text(`Cake Flavour: ${entry.category}`, pageLeft, document.y, { width: textWidth });
       }
@@ -177,68 +182,68 @@ async function createInvoicePdf(order, catalog) {
       }
 
       document.y = Math.max(textBottom, startY + (hasImage ? imageSize : 0));
-      document.moveDown(0.5);
+      document.moveDown(ITEM_GAP);
       document.moveTo(pageLeft, document.y).lineTo(pageRight, document.y).strokeColor("#f1ece7").stroke();
-      document.moveDown(0.5);
+      document.moveDown(ITEM_GAP);
     }
 
     // --- Header -----------------------------------------------------------
-    document.fontSize(20).fillColor("#9f3449").text(bakeryName);
-    document.fontSize(14).fillColor("#222222").text("Order Form");
-    document.moveDown(0.3);
-    document.fontSize(10).fillColor("#555555")
+    document.fontSize(18).fillColor("#9f3449").text(bakeryName);
+    document.fontSize(12).fillColor("#222222").text("Order Form");
+    document.moveDown(0.2);
+    document.fontSize(9).fillColor("#555555")
       .text(`Date of Placing Order: ${new Date(order.createdAt).toLocaleString("en-IN")}`);
-    document.moveDown(0.6);
+    document.moveDown(0.35);
     document.moveTo(pageLeft, document.y).lineTo(pageRight, document.y).strokeColor("#e5d9cf").stroke();
-    document.moveDown(0.6);
+    document.moveDown(0.35);
 
     // --- Customer Details ---------------------------------------------------
-    document.fontSize(13).fillColor("#222222").text("Customer Details");
-    document.moveDown(0.2);
-    document.fontSize(10).fillColor("#444444");
+    document.fontSize(12).fillColor("#222222").text("Customer Details");
+    document.moveDown(0.15);
+    document.fontSize(9).fillColor("#444444");
     document.text(`Customer Name: ${order.customer.name || ""}`);
     document.text(`Mobile Number: ${order.customer.phone || ""}`);
     document.text(`Email: ${order.customer.email || ""}`);
     document.text(`Address: ${order.customer.address || ""}`);
-    document.moveDown(0.6);
+    document.moveDown(0.35);
 
     // --- Cake / Item Details -------------------------------------------------
-    document.fontSize(13).fillColor("#222222")
+    document.fontSize(12).fillColor("#222222")
       .text(cakeEntries.length > 1 ? "Cake Details (Items)" : "Cake Details");
-    document.moveDown(0.3);
+    document.moveDown(0.2);
 
     cakeEntries.forEach((entry, index) => renderItemRow(entry, index, { showFlavour: true }));
 
     // --- Add-ons -------------------------------------------------------------
-    // Add-ons now get the same big-photo treatment as the cakes, so every
-    // item the customer ordered shows a real picture, not just a text line.
+    // Add-ons get the same photo treatment as the cakes, so every item the
+    // customer ordered shows a real picture, not just a text line.
     if (addOnEntries.length) {
-      if (document.y + 24 > pageBottom) {
+      if (document.y + 20 > pageBottom) {
         document.addPage();
       }
-      document.fontSize(13).fillColor("#222222").text("Add-ons");
-      document.moveDown(0.3);
+      document.fontSize(12).fillColor("#222222").text("Add-ons");
+      document.moveDown(0.2);
       addOnEntries.forEach((entry, index) => renderItemRow(entry, index, { showFlavour: false }));
     }
 
     // --- Special Instructions --------------------------------------------------
     if (order.customer.instructions) {
-      document.fontSize(13).fillColor("#222222").text("Special Instructions");
-      document.moveDown(0.2);
-      document.fontSize(10).fillColor("#444444").text(order.customer.instructions);
-      document.moveDown(0.6);
+      document.fontSize(12).fillColor("#222222").text("Special Instructions");
+      document.moveDown(0.15);
+      document.fontSize(9).fillColor("#444444").text(order.customer.instructions);
+      document.moveDown(0.35);
     }
 
     // --- Order & Delivery -------------------------------------------------------
-    document.fontSize(13).fillColor("#222222").text("Order & Delivery");
-    document.moveDown(0.2);
-    document.fontSize(10).fillColor("#444444");
+    document.fontSize(12).fillColor("#222222").text("Order & Delivery");
+    document.moveDown(0.15);
+    document.fontSize(9).fillColor("#444444");
     document.text(`Order ID: ${order.id}`);
     document.text(`Payment: ${order.paymentMethod}`);
-    document.moveDown(0.6);
+    document.moveDown(0.35);
 
-    document.fontSize(15).fillColor("#9f3449").text(`Total: ${money(order.total)}`);
-    document.fontSize(9).fillColor("#8a6a55").moveDown(0.4)
+    document.fontSize(13).fillColor("#9f3449").text(`Total: ${money(order.total)}`);
+    document.fontSize(8).fillColor("#8a6a55").moveDown(0.25)
       .text("Thank you for your order. We will contact you very soon.");
 
     document.end();
