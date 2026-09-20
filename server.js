@@ -108,7 +108,9 @@ async function createInvoicePdf(order, catalog) {
   const bakeryName = (catalog && catalog.settings && catalog.settings.bakeryName) || "Premium Cakes";
 
   // Resolve each item's flavour/category and real photo bytes up front
-  // (async lookups), so the layout below can run synchronously.
+  // (async lookups), so the layout below can run synchronously. Every item
+  // the customer ordered gets its photo looked up here - cakes AND add-ons -
+  // so every line in the PDF can show a real picture, not just the cakes.
   const resolvedItems = await Promise.all(
     (order.items || []).map(async (item) => {
       const fields = findOrderItemCatalogFields(item, catalog);
@@ -120,6 +122,9 @@ async function createInvoicePdf(order, catalog) {
   const addOnEntries = resolvedItems.filter((entry) => /add-?ons?/i.test(entry.category));
   const cakeEntries = resolvedItems.filter((entry) => !/add-?ons?/i.test(entry.category));
 
+  // Photo size for every item row in the PDF (cakes and add-ons alike).
+  const IMAGE_SIZE = 220;
+
   return new Promise((resolve, reject) => {
     const document = new PDFDocument({ margin: 42, size: "A4" });
     const chunks = [];
@@ -129,6 +134,53 @@ async function createInvoicePdf(order, catalog) {
 
     const pageRight = document.page.width - document.page.margins.right;
     const pageLeft = document.page.margins.left;
+    const pageBottom = document.page.height - document.page.margins.bottom;
+
+    // Renders one order item (cake or add-on) as a row: details on the left,
+    // a big real product photo on the right. Starts a fresh page first if
+    // the photo wouldn't fully fit on the current one.
+    function renderItemRow(entry, index, { showFlavour }) {
+      const item = entry.item;
+      const label = item.specialTitle ? `${item.name} - ${item.specialTitle}` : item.name;
+      const hasImage = Boolean(entry.imageBuffer);
+      const imageSize = IMAGE_SIZE;
+
+      if (document.y + imageSize > pageBottom) {
+        document.addPage();
+      }
+
+      const startY = document.y;
+      const textWidth = hasImage ? pageRight - pageLeft - imageSize - 16 : pageRight - pageLeft;
+
+      document.fontSize(11).fillColor("#3a2a22").text(`${index + 1}. ${label}`, pageLeft, startY, { width: textWidth });
+      document.fontSize(9).fillColor("#6a5344");
+      if (showFlavour && entry.category) {
+        document.text(`Cake Flavour: ${entry.category}`, pageLeft, document.y, { width: textWidth });
+      }
+      if (item.kg) {
+        document.text(`Size: ${item.kg}`, pageLeft, document.y, { width: textWidth });
+      }
+      document.text(`Quantity: ${item.qty}`, pageLeft, document.y, { width: textWidth });
+      document.text(`Price: ${money(item.lineTotal)}`, pageLeft, document.y, { width: textWidth });
+      const textBottom = document.y;
+
+      if (hasImage) {
+        try {
+          document.image(entry.imageBuffer, pageRight - imageSize, startY, {
+            width: imageSize,
+            height: imageSize,
+            fit: [imageSize, imageSize]
+          });
+        } catch (error) {
+          console.error("Order PDF: failed to embed item image", error && error.message ? error.message : error);
+        }
+      }
+
+      document.y = Math.max(textBottom, startY + (hasImage ? imageSize : 0));
+      document.moveDown(0.5);
+      document.moveTo(pageLeft, document.y).lineTo(pageRight, document.y).strokeColor("#f1ece7").stroke();
+      document.moveDown(0.5);
+    }
 
     // --- Header -----------------------------------------------------------
     document.fontSize(20).fillColor("#9f3449").text(bakeryName);
@@ -155,51 +207,18 @@ async function createInvoicePdf(order, catalog) {
       .text(cakeEntries.length > 1 ? "Cake Details (Items)" : "Cake Details");
     document.moveDown(0.3);
 
-    cakeEntries.forEach((entry, index) => {
-      const item = entry.item;
-      const label = item.specialTitle ? `${item.name} - ${item.specialTitle}` : item.name;
-      const startY = document.y;
-      const imageSize = 150;
-      const hasImage = Boolean(entry.imageBuffer);
-      const textWidth = hasImage ? pageRight - pageLeft - imageSize - 16 : pageRight - pageLeft;
-
-      document.fontSize(11).fillColor("#3a2a22").text(`${index + 1}. ${label}`, pageLeft, startY, { width: textWidth });
-      document.fontSize(9).fillColor("#6a5344");
-      if (entry.category) {
-        document.text(`Cake Flavour: ${entry.category}`, pageLeft, document.y, { width: textWidth });
-      }
-      document.text(`Size: ${item.kg || ""}`, pageLeft, document.y, { width: textWidth });
-      document.text(`Quantity: ${item.qty}`, pageLeft, document.y, { width: textWidth });
-      document.text(`Price: ${money(item.lineTotal)}`, pageLeft, document.y, { width: textWidth });
-      const textBottom = document.y;
-
-      if (hasImage) {
-        try {
-          document.image(entry.imageBuffer, pageRight - imageSize, startY, {
-            width: imageSize,
-            height: imageSize,
-            fit: [imageSize, imageSize]
-          });
-        } catch (error) {
-          console.error("Order PDF: failed to embed item image", error && error.message ? error.message : error);
-        }
-      }
-
-      document.y = Math.max(textBottom, startY + (hasImage ? imageSize : 0));
-      document.moveDown(0.5);
-      document.moveTo(pageLeft, document.y).lineTo(pageRight, document.y).strokeColor("#f1ece7").stroke();
-      document.moveDown(0.5);
-    });
+    cakeEntries.forEach((entry, index) => renderItemRow(entry, index, { showFlavour: true }));
 
     // --- Add-ons -------------------------------------------------------------
+    // Add-ons now get the same big-photo treatment as the cakes, so every
+    // item the customer ordered shows a real picture, not just a text line.
     if (addOnEntries.length) {
+      if (document.y + 24 > pageBottom) {
+        document.addPage();
+      }
       document.fontSize(13).fillColor("#222222").text("Add-ons");
-      document.moveDown(0.2);
-      document.fontSize(10).fillColor("#444444");
-      addOnEntries.forEach((entry, index) => {
-        document.text(`${index + 1}. ${entry.item.name} x ${entry.item.qty} - ${money(entry.item.lineTotal)}`);
-      });
-      document.moveDown(0.6);
+      document.moveDown(0.3);
+      addOnEntries.forEach((entry, index) => renderItemRow(entry, index, { showFlavour: false }));
     }
 
     // --- Special Instructions --------------------------------------------------
