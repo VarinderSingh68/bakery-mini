@@ -157,8 +157,8 @@ async function createInvoicePdf(order, catalog) {
       const startY = document.y;
       const textWidth = hasImage ? pageRight - pageLeft - imageSize - 12 : pageRight - pageLeft;
 
-      document.fontSize(10).fillColor("#3a2a22").text(`${index + 1}. ${label}`, pageLeft, startY, { width: textWidth });
-      document.fontSize(8).fillColor("#6a5344");
+      document.fontSize(12).fillColor("#3a2a22").text(`${index + 1}. ${label}`, pageLeft, startY, { width: textWidth });
+      document.fontSize(9).fillColor("#6a5344");
       if (showFlavour && entry.category) {
         document.text(`Cake Flavour: ${entry.category}`, pageLeft, document.y, { width: textWidth });
       }
@@ -188,19 +188,19 @@ async function createInvoicePdf(order, catalog) {
     }
 
     // --- Header -----------------------------------------------------------
-    document.fontSize(18).fillColor("#9f3449").text(bakeryName);
-    document.fontSize(12).fillColor("#222222").text("Order Form");
+    document.fontSize(21).fillColor("#9f3449").text(bakeryName);
+    document.fontSize(14).fillColor("#222222").text("Order Form");
     document.moveDown(0.2);
-    document.fontSize(9).fillColor("#555555")
+    document.fontSize(10).fillColor("#555555")
       .text(`Date of Placing Order: ${new Date(order.createdAt).toLocaleString("en-IN")}`);
     document.moveDown(0.35);
     document.moveTo(pageLeft, document.y).lineTo(pageRight, document.y).strokeColor("#e5d9cf").stroke();
     document.moveDown(0.35);
 
     // --- Customer Details ---------------------------------------------------
-    document.fontSize(12).fillColor("#222222").text("Customer Details");
+    document.fontSize(14).fillColor("#222222").text("Customer Details");
     document.moveDown(0.15);
-    document.fontSize(9).fillColor("#444444");
+    document.fontSize(10).fillColor("#444444");
     document.text(`Customer Name: ${order.customer.name || ""}`);
     document.text(`Mobile Number: ${order.customer.phone || ""}`);
     document.text(`Email: ${order.customer.email || ""}`);
@@ -208,7 +208,7 @@ async function createInvoicePdf(order, catalog) {
     document.moveDown(0.35);
 
     // --- Cake / Item Details -------------------------------------------------
-    document.fontSize(12).fillColor("#222222")
+    document.fontSize(14).fillColor("#222222")
       .text(cakeEntries.length > 1 ? "Cake Details (Items)" : "Cake Details");
     document.moveDown(0.2);
 
@@ -221,29 +221,29 @@ async function createInvoicePdf(order, catalog) {
       if (document.y + 20 > pageBottom) {
         document.addPage();
       }
-      document.fontSize(12).fillColor("#222222").text("Add-ons");
+      document.fontSize(14).fillColor("#222222").text("Add-ons");
       document.moveDown(0.2);
       addOnEntries.forEach((entry, index) => renderItemRow(entry, index, { showFlavour: false }));
     }
 
     // --- Special Instructions --------------------------------------------------
     if (order.customer.instructions) {
-      document.fontSize(12).fillColor("#222222").text("Special Instructions");
+      document.fontSize(14).fillColor("#222222").text("Special Instructions");
       document.moveDown(0.15);
-      document.fontSize(9).fillColor("#444444").text(order.customer.instructions);
+      document.fontSize(10).fillColor("#444444").text(order.customer.instructions);
       document.moveDown(0.35);
     }
 
     // --- Order & Delivery -------------------------------------------------------
-    document.fontSize(12).fillColor("#222222").text("Order & Delivery");
+    document.fontSize(14).fillColor("#222222").text("Order & Delivery");
     document.moveDown(0.15);
-    document.fontSize(9).fillColor("#444444");
+    document.fontSize(10).fillColor("#444444");
     document.text(`Order ID: ${order.id}`);
     document.text(`Payment: ${order.paymentMethod}`);
     document.moveDown(0.35);
 
-    document.fontSize(13).fillColor("#9f3449").text(`Total: ${money(order.total)}`);
-    document.fontSize(8).fillColor("#8a6a55").moveDown(0.25)
+    document.fontSize(15).fillColor("#9f3449").text(`Total: ${money(order.total)}`);
+    document.fontSize(9).fillColor("#8a6a55").moveDown(0.25)
       .text("Thank you for your order. We will contact you very soon.");
 
     document.end();
