@@ -1980,15 +1980,18 @@
       .map((item) => {
         const label = item.specialTitle ? `${item.name} - ${item.specialTitle}` : item.name;
         const image = emailItemImageUrl(item, data);
+        // Item photos are sized larger (110x110) than a typical email thumbnail
+        // so the customer/owner can clearly identify which cake is which at a
+        // glance, rather than squinting at a tiny 56x56 icon.
         return (
           '<tr>' +
-          '<td style="padding:10px 0;border-bottom:1px solid #f1ece7;width:64px;">' +
-          '<img src="' + escapeHtml(image) + '" width="56" height="56" alt="' + escapeHtml(label) + '" ' +
-          'style="width:56px;height:56px;object-fit:cover;border-radius:8px;display:block;" /></td>' +
-          '<td style="padding:10px 12px;border-bottom:1px solid #f1ece7;font-size:14px;color:#3a2a22;">' +
-          '<strong>' + escapeHtml(label) + '</strong><br />' +
+          '<td style="padding:12px 0;border-bottom:1px solid #f1ece7;width:120px;">' +
+          '<img src="' + escapeHtml(image) + '" width="110" height="110" alt="' + escapeHtml(label) + '" ' +
+          'style="width:110px;height:110px;object-fit:cover;border-radius:10px;display:block;" /></td>' +
+          '<td style="padding:12px 16px;border-bottom:1px solid #f1ece7;font-size:15px;color:#3a2a22;vertical-align:top;">' +
+          '<strong style="font-size:16px;">' + escapeHtml(label) + '</strong><br />' +
           '<span style="color:#8a6a55;font-size:13px;">' + escapeHtml(item.kg) + ' &times; ' + item.qty + '</span></td>' +
-          '<td style="padding:10px 0;border-bottom:1px solid #f1ece7;font-size:14px;text-align:right;white-space:nowrap;color:#3a2a22;">' +
+          '<td style="padding:12px 0;border-bottom:1px solid #f1ece7;font-size:15px;text-align:right;white-space:nowrap;color:#3a2a22;vertical-align:top;">' +
           formatPrice(item.lineTotal) + '</td>' +
           '</tr>'
         );
@@ -2031,6 +2034,12 @@
       order_total: formatPrice(order.total),
       customer_details: customerDetails,
       order_details: orderDetails,
+      // A single order-specific PDF (matching the printable order-form
+      // layout) that the server regenerates on request. EmailJS's template
+      // Attachments tab can be configured to fetch and attach this URL
+      // automatically, and it's also linked directly in the email body as a
+      // reliable fallback in case dynamic attachment isn't set up.
+      order_pdf_url: absoluteImageUrl(`/api/orders/${order.id}/order-form.pdf`),
       to_email: order.customer.email,
       reply_to: order.customer.email,
       customer_message: `Thank you for your order. We received it successfully and will contact you very soon. Order ID: ${order.id}`,

@@ -49,42 +49,179 @@ function money(value) {
   return `Rs. ${Number(value || 0).toLocaleString("en-IN")}`;
 }
 
-function createInvoicePdf(order) {
+// --- Order-form PDF (used for both the WhatsApp invoice and the emailed
+// PDF link) ----------------------------------------------------------------
+// Mirrors the printable paper order form: Customer Details, Cake/Item
+// Details (with a real product photo per item), Add-ons, Special
+// Instructions, and Order & Delivery. Only fields the checkout form actually
+// collects today are included - there is currently no "Cake Theme", "Name on
+// Cake", delivery date/time, or pickup-vs-delivery field captured at
+// checkout, so those rows are simply left out rather than shown blank.
+
+function isDataUrlImage(value) {
+  return typeof value === "string" && value.startsWith("data:image/");
+}
+
+async function resolveOrderItemImageBuffer(imagePath) {
+  if (!imagePath) {
+    return null;
+  }
+  if (isDataUrlImage(imagePath)) {
+    try {
+      return Buffer.from(imagePath.split(",")[1] || "", "base64");
+    } catch (error) {
+      return null;
+    }
+  }
+  const match = String(imagePath).match(/\/api\/images\/([a-z0-9_-]+)/i);
+  if (!match) {
+    return null;
+  }
+  try {
+    const record = await readImageRecord(match[1]);
+    if (isDataUrlImage(record)) {
+      return Buffer.from(record.split(",")[1] || "", "base64");
+    }
+  } catch (error) {
+    console.error("Order PDF: image lookup failed", error && error.message ? error.message : error);
+  }
+  return null;
+}
+
+function findOrderItemCatalogFields(item, catalog) {
+  const products = (catalog && catalog.products) || [];
+  const specials = (catalog && catalog.specials) || [];
+  let source = null;
+  if (item.productId) {
+    source = products.find((product) => product.id === item.productId);
+  }
+  if (!source && item.specialId) {
+    source = specials.find((special) => special.id === item.specialId);
+  }
+  return {
+    category: (source && source.category) || "",
+    image: (source && source.image) || ""
+  };
+}
+
+async function createInvoicePdf(order, catalog) {
+  const bakeryName = (catalog && catalog.settings && catalog.settings.bakeryName) || "Premium Cakes";
+
+  // Resolve each item's flavour/category and real photo bytes up front
+  // (async lookups), so the layout below can run synchronously.
+  const resolvedItems = await Promise.all(
+    (order.items || []).map(async (item) => {
+      const fields = findOrderItemCatalogFields(item, catalog);
+      const imageBuffer = await resolveOrderItemImageBuffer(fields.image);
+      return { item, category: fields.category, imageBuffer };
+    })
+  );
+
+  const addOnEntries = resolvedItems.filter((entry) => /add-?ons?/i.test(entry.category));
+  const cakeEntries = resolvedItems.filter((entry) => !/add-?ons?/i.test(entry.category));
+
   return new Promise((resolve, reject) => {
-    const document = new PDFDocument({ margin: 48 });
+    const document = new PDFDocument({ margin: 42, size: "A4" });
     const chunks = [];
     document.on("data", (chunk) => chunks.push(chunk));
     document.on("end", () => resolve(Buffer.concat(chunks)));
     document.on("error", reject);
 
-    document.fontSize(24).fillColor("#9f3449").text("Premium Cakes");
-    document.moveDown(0.4);
-    document.fontSize(18).fillColor("#222222").text("Order Invoice");
-    document.moveDown();
-    document.fontSize(10).fillColor("#555555");
-    document.text(`Order ID: ${order.id}`);
-    document.text(`Order date: ${new Date(order.createdAt).toLocaleString("en-IN")}`);
-    document.text(`Payment: ${order.paymentMethod}`);
-    document.moveDown();
+    const pageRight = document.page.width - document.page.margins.right;
+    const pageLeft = document.page.margins.left;
 
-    document.fontSize(13).fillColor("#222222").text("Customer details");
-    document.fontSize(10).fillColor("#555555");
-    document.text(`Name: ${order.customer.name || ""}`);
-    document.text(`Email: ${order.customer.email || ""}`);
-    document.text(`Phone: ${order.customer.phone || ""}`);
-    document.text(`Address: ${order.customer.address || ""}`);
-    document.text(`Instructions: ${order.customer.instructions || "None"}`);
-    document.moveDown();
-
-    document.fontSize(13).fillColor("#222222").text("Items");
+    // --- Header -----------------------------------------------------------
+    document.fontSize(20).fillColor("#9f3449").text(bakeryName);
+    document.fontSize(14).fillColor("#222222").text("Order Form");
     document.moveDown(0.3);
-    order.items.forEach((item) => {
+    document.fontSize(10).fillColor("#555555")
+      .text(`Date of Placing Order: ${new Date(order.createdAt).toLocaleString("en-IN")}`);
+    document.moveDown(0.6);
+    document.moveTo(pageLeft, document.y).lineTo(pageRight, document.y).strokeColor("#e5d9cf").stroke();
+    document.moveDown(0.6);
+
+    // --- Customer Details ---------------------------------------------------
+    document.fontSize(13).fillColor("#222222").text("Customer Details");
+    document.moveDown(0.2);
+    document.fontSize(10).fillColor("#444444");
+    document.text(`Customer Name: ${order.customer.name || ""}`);
+    document.text(`Mobile Number: ${order.customer.phone || ""}`);
+    document.text(`Email: ${order.customer.email || ""}`);
+    document.text(`Address: ${order.customer.address || ""}`);
+    document.moveDown(0.6);
+
+    // --- Cake / Item Details -------------------------------------------------
+    document.fontSize(13).fillColor("#222222")
+      .text(cakeEntries.length > 1 ? "Cake Details (Items)" : "Cake Details");
+    document.moveDown(0.3);
+
+    cakeEntries.forEach((entry, index) => {
+      const item = entry.item;
       const label = item.specialTitle ? `${item.name} - ${item.specialTitle}` : item.name;
-      document.fontSize(10).fillColor("#555555").text(`${label} | ${item.kg} | Qty: ${item.qty} | ${money(item.lineTotal)}`);
+      const startY = document.y;
+      const imageSize = 90;
+      const hasImage = Boolean(entry.imageBuffer);
+      const textWidth = hasImage ? pageRight - pageLeft - imageSize - 16 : pageRight - pageLeft;
+
+      document.fontSize(11).fillColor("#3a2a22").text(`${index + 1}. ${label}`, pageLeft, startY, { width: textWidth });
+      document.fontSize(9).fillColor("#6a5344");
+      if (entry.category) {
+        document.text(`Cake Flavour: ${entry.category}`, pageLeft, document.y, { width: textWidth });
+      }
+      document.text(`Size: ${item.kg || ""}`, pageLeft, document.y, { width: textWidth });
+      document.text(`Quantity: ${item.qty}`, pageLeft, document.y, { width: textWidth });
+      document.text(`Price: ${money(item.lineTotal)}`, pageLeft, document.y, { width: textWidth });
+      const textBottom = document.y;
+
+      if (hasImage) {
+        try {
+          document.image(entry.imageBuffer, pageRight - imageSize, startY, {
+            width: imageSize,
+            height: imageSize,
+            fit: [imageSize, imageSize]
+          });
+        } catch (error) {
+          console.error("Order PDF: failed to embed item image", error && error.message ? error.message : error);
+        }
+      }
+
+      document.y = Math.max(textBottom, startY + (hasImage ? imageSize : 0));
+      document.moveDown(0.5);
+      document.moveTo(pageLeft, document.y).lineTo(pageRight, document.y).strokeColor("#f1ece7").stroke();
+      document.moveDown(0.5);
     });
-    document.moveDown();
-    document.fontSize(16).fillColor("#9f3449").text(`Total: ${money(order.total)}`);
-    document.fontSize(10).fillColor("#555555").moveDown().text("Thank you for your order. We will contact you very soon.");
+
+    // --- Add-ons -------------------------------------------------------------
+    if (addOnEntries.length) {
+      document.fontSize(13).fillColor("#222222").text("Add-ons");
+      document.moveDown(0.2);
+      document.fontSize(10).fillColor("#444444");
+      addOnEntries.forEach((entry, index) => {
+        document.text(`${index + 1}. ${entry.item.name} x ${entry.item.qty} - ${money(entry.item.lineTotal)}`);
+      });
+      document.moveDown(0.6);
+    }
+
+    // --- Special Instructions --------------------------------------------------
+    if (order.customer.instructions) {
+      document.fontSize(13).fillColor("#222222").text("Special Instructions");
+      document.moveDown(0.2);
+      document.fontSize(10).fillColor("#444444").text(order.customer.instructions);
+      document.moveDown(0.6);
+    }
+
+    // --- Order & Delivery -------------------------------------------------------
+    document.fontSize(13).fillColor("#222222").text("Order & Delivery");
+    document.moveDown(0.2);
+    document.fontSize(10).fillColor("#444444");
+    document.text(`Order ID: ${order.id}`);
+    document.text(`Payment: ${order.paymentMethod}`);
+    document.moveDown(0.6);
+
+    document.fontSize(15).fillColor("#9f3449").text(`Total: ${money(order.total)}`);
+    document.fontSize(9).fillColor("#8a6a55").moveDown(0.4)
+      .text("Thank you for your order. We will contact you very soon.");
+
     document.end();
   });
 }
@@ -357,13 +494,44 @@ app.post("/api/orders", async (request, response) => {
        VALUES ($1, $2, $3, $4, $5, $6, $7)`,
       [order.id, order.createdAt, order.status || "New", order.paymentMethod || "Order payment", order.customer, order.items, order.total]
     );
-    const pdf = await createInvoicePdf(order);
+    const catalogForPdf = await readCatalog().catch(() => null);
+    const pdf = await createInvoicePdf(order, catalogForPdf);
     await deliverOrderOnWhatsApp(order, pdf);
     await pool.query("UPDATE orders SET pdf_sent = TRUE WHERE id = $1", [order.id]);
     response.status(201).json({ saved: true, whatsappSent: true, orderId: order.id });
   } catch (error) {
     console.error("Order WhatsApp delivery failed:", error && error.message ? error.message : error);
     response.status(502).json({ saved: true, whatsappSent: false, orderId: order.id, error: error.message });
+  }
+});
+
+// The same order-form PDF, fetchable by order id. EmailJS's server fetches
+// this URL to attach the PDF to the order confirmation emails (see the
+// template's Attachments tab), and it's also linked directly in the email
+// body as a reliable fallback. Order ids include a random suffix
+// (SL-YYYYMMDD-XXXXX), so this is unauthenticated-but-unguessable, the same
+// tradeoff most small order/receipt links make.
+app.get("/api/orders/:id/order-form.pdf", async (request, response) => {
+  if (!pool) {
+    return response.status(404).type("text/plain").send("Not found");
+  }
+  try {
+    const result = await pool.query(
+      "SELECT id, created_at AS \"createdAt\", payment_method AS \"paymentMethod\", customer, items, total FROM orders WHERE id = $1",
+      [request.params.id]
+    );
+    const order = result.rows[0];
+    if (!order) {
+      return response.status(404).type("text/plain").send("Order not found");
+    }
+    const catalog = await readCatalog().catch(() => null);
+    const pdf = await createInvoicePdf(order, catalog);
+    response.setHeader("Content-Type", "application/pdf");
+    response.setHeader("Content-Disposition", `inline; filename="order-${order.id}.pdf"`);
+    response.send(pdf);
+  } catch (error) {
+    console.error("Order PDF generation failed:", error && error.message ? error.message : error);
+    response.status(500).type("text/plain").send("Order PDF could not be generated.");
   }
 });
 
