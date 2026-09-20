@@ -188,31 +188,28 @@
         await publishCatalog("Published to cloud - all devices now see this menu.");
         return;
       }
+      // The cloud catalog is the single source of truth once one exists. Every
+      // real edit made in this dashboard (settings, products, coupons, etc.)
+      // already publishes to the cloud immediately via publishCatalog(), so
+      // there is never a legitimate reason for simply OPENING the dashboard to
+      // push this browser's local/cached copy over the cloud. Comparing
+      // catalogUpdatedAt timestamps and pushing "if local looks newer" used to
+      // do exactly that - and any browser/device with an older cached copy
+      // (stale localStorage, a previous interrupted save, clock skew, etc.)
+      // could silently revert real settings, such as Owner Email, back to an
+      // old value just by being opened. Always adopt the cloud's data instead.
       const cloudAt = body.catalog.settings && body.catalog.settings.catalogUpdatedAt;
       const localAt = data.settings && data.settings.catalogUpdatedAt;
-      if (!cloudAt && !localAt) {
-        const merged = await dataApi.pullCloudData();
-        if (merged) {
-          data = merged;
-          refreshAll();
-          populateSettingsForm();
-          setCloudStatus("Updated from cloud catalog.");
-          return;
-        }
+      if (cloudAt && localAt && cloudAt === localAt) {
+        setCloudStatus("Cloud is up to date with this browser.");
+        return;
       }
-      if (cloudAt && (!localAt || cloudAt > localAt)) {
-        // Another device saved newer changes: adopt them here too.
-        const merged = await dataApi.pullCloudData();
-        if (merged) {
-          data = merged;
-          refreshAll();
-          populateSettingsForm();
-          setCloudStatus("Updated from cloud (newer edits found).");
-          return;
-        }
-      }
-      if (localAt && (!cloudAt || localAt > cloudAt)) {
-        await publishCatalog("Published local changes to cloud.");
+      const merged = await dataApi.pullCloudData();
+      if (merged) {
+        data = merged;
+        refreshAll();
+        populateSettingsForm();
+        setCloudStatus("Updated from cloud catalog.");
         return;
       }
       setCloudStatus("Cloud is up to date with this browser.");
