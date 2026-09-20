@@ -2035,7 +2035,12 @@
       reply_to: order.customer.email,
       customer_message: `Thank you for your order. We received it successfully and will contact you very soon. Order ID: ${order.id}`,
       owner_message: `New order received from ${order.customer.name}. Please contact the customer very soon.`,
-      customer_subject: `Order confirmation ${order.id}`,
+      // The EmailJS customer template's own Subject field already reads
+      // "Order Confirmed #{{customer_subject}}!" - sending a full sentence
+      // here produced a garbled, duplicated subject line ("Order Confirmed
+      // #Order confirmation ORD-123!"), which looks auto-generated/spammy
+      // and can hurt inbox placement. Send just the order id instead.
+      customer_subject: order.id,
       owner_subject: `New cake order ${order.id}`
     };
   }
