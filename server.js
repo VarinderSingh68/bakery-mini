@@ -159,7 +159,7 @@ async function createInvoicePdf(order, catalog) {
       const item = entry.item;
       const label = item.specialTitle ? `${item.name} - ${item.specialTitle}` : item.name;
       const startY = document.y;
-      const imageSize = 90;
+      const imageSize = 150;
       const hasImage = Boolean(entry.imageBuffer);
       const textWidth = hasImage ? pageRight - pageLeft - imageSize - 16 : pageRight - pageLeft;
 
